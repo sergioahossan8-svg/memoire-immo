@@ -1,0 +1,55 @@
+name: immogo
+description: "Application mobile ImmoGo Bénin — Immobilier au Bénin"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Réseau
+  dio: ^5.7.0
+
+  # State management
+  flutter_riverpod: ^2.5.1
+
+  # Navigation
+  go_router: ^14.3.0
+
+  # Auth storage sécurisé
+  flutter_secure_storage: ^9.2.2
+
+  # Config .env
+  flutter_dotenv: ^5.2.1
+
+  # Fonts
+  google_fonts: ^6.2.1
+
+  # Image cache réseau
+  cached_network_image: ^3.4.1
+
+  # Image picker (avatar)
+  image_picker: ^1.1.2
+
+  # WebView (paiement FedaPay)
+  webview_flutter: ^4.9.0
+
+  # Formatage dates/nombres
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - .env
