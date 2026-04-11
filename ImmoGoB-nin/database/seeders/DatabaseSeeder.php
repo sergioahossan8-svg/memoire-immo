@@ -23,8 +23,8 @@ class DatabaseSeeder extends Seeder
         $superAdmin = User::withoutGlobalScopes()->firstOrCreate(
             ['email' => 'hessoueulogegracien@gmail.com'],
             [
-                'name'      => 'HESSOU',
-                'prenom'    => 'Euloge Grâcien',
+                'name'      => 'ImmoGo',
+                'prenom'    => 'Super Admin',
                 'email'     => 'hessoueulogegracien@gmail.com',
                 'telephone' => '+22901000000',
                 'whatsapp'  => '+22901000000',

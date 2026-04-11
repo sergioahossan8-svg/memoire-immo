@@ -9,20 +9,16 @@ class Agence extends Model
     protected $fillable = [
         'nom_commercial', 'secteur', 'ville', 'adresse_complete',
         'email', 'telephone', 'logo', 'statut',
-        'fedapay_secret_key', 'fedapay_env',
+        'kkiapay_public_key', 'kkiapay_private_key', 'kkiapay_secret', 'kkiapay_sandbox',
     ];
 
-    // Masquer la clé secrète dans les sérialisations JSON
-    protected $hidden = ['fedapay_secret_key'];
+    protected $hidden = ['kkiapay_private_key', 'kkiapay_secret'];
 
-    public function getFedapayKey(): ?string
+    public function hasKkiapay(): bool
     {
-        return $this->fedapay_secret_key;
-    }
-
-    public function hasFedapay(): bool
-    {
-        return !empty($this->fedapay_secret_key);
+        return !empty($this->kkiapay_public_key)
+            && !empty($this->kkiapay_private_key)
+            && !empty($this->kkiapay_secret);
     }
 
     public function administrateurs()

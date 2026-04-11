@@ -7,26 +7,13 @@ use App\Models\Bien;
 use App\Models\Contrat;
 use App\Models\NotificationImmogo;
 use App\Models\Paiement;
-use App\Services\FedaPayService;
+use App\Services\KKiapayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PaiementController extends Controller
 {
-    public function __construct(private FedaPayService $fedaPay) {}
-
-    // ── Résoudre le service FedaPay avec la clé de l'agence du bien ───────────
-    private function fedaPayPour(?int $agenceId = null): FedaPayService
-    {
-        if ($agenceId) {
-            $agence = \App\Models\Agence::find($agenceId);
-            return new FedaPayService($agence);
-        }
-        return new FedaPayService();
-    }
-
     // ── 1. Réservation (acompte 10%) ──────────────────────────────────────────
-    // Appelé après le formulaire de réservation — lance FedaPay
     public function initReservation(Bien $bien)
     {
         abort_if($bien->statut !== 'disponible' || !$bien->is_published, 404);
@@ -37,7 +24,7 @@ class PaiementController extends Controller
                 ->withErrors(['error' => 'Session expirée, veuillez recommencer.']);
         }
 
-        return $this->lancerFedaPay(
+        return $this->lancerPaiement(
             montant:      $pending['montant'],
             description:  'Acompte réservation (10%) - ' . $bien->titre,
             typePaiement: 'acompte',
@@ -52,7 +39,7 @@ class PaiementController extends Controller
         );
     }
 
-    // ── 2. Paiement du solde (après réservation existante) ────────────────────
+    // ── 2. Paiement du solde ──────────────────────────────────────────────────
     public function showSolde(Contrat $contrat)
     {
         abort_if($contrat->client_id !== auth()->id(), 403);
@@ -71,7 +58,7 @@ class PaiementController extends Controller
             'type_paiement' => 'required|in:acompte,solde',
         ]);
 
-        return $this->lancerFedaPay(
+        return $this->lancerPaiement(
             montant:      $data['montant'],
             description:  'Paiement ' . $data['type_paiement'] . ' - ' . $contrat->bien->titre,
             typePaiement: $data['type_paiement'],
@@ -94,11 +81,9 @@ class PaiementController extends Controller
     {
         abort_if($bien->statut !== 'disponible', 422);
 
-        $data = $request->validate([
-            'type_contrat' => 'required|in:location,vente',
-        ]);
+        $data = $request->validate(['type_contrat' => 'required|in:location,vente']);
 
-        return $this->lancerFedaPay(
+        return $this->lancerPaiement(
             montant:      $bien->prix,
             description:  'Paiement complet - ' . $bien->titre,
             typePaiement: 'complet',
@@ -111,175 +96,132 @@ class PaiementController extends Controller
         );
     }
 
-    // ── Méthode commune : créer la transaction FedaPay ────────────────────────
-    private function lancerFedaPay(float $montant, string $description, string $typePaiement, array $meta)
+    // ── Méthode commune : stocker en session et rediriger vers KKiapay ────────
+    private function lancerPaiement(float $montant, string $description, string $typePaiement, array $meta)
     {
-        $user      = auth()->user();
-        $reference = 'PAY-' . strtoupper(Str::random(10));
+        $user       = auth()->user();
+        $reference  = 'PAY-' . strtoupper(Str::random(10));
+        $pendingKey = 'pay_' . Str::random(20);
 
-        session(['fedapay_pending' => array_merge($meta, [
-            'reference'     => $reference,
-            'montant'       => $montant,
-            'type_paiement' => $typePaiement,
-            'client_id'     => $user->id,
-        ])]);
+        session([
+            $pendingKey       => array_merge($meta, [
+                'reference'     => $reference,
+                'montant'       => $montant,
+                'type_paiement' => $typePaiement,
+                'client_id'     => $user->id,
+            ]),
+            'pay_pending_key' => $pendingKey,
+            'pay_montant'     => $montant,
+            'pay_description' => $description,
+            'pay_agence_id'   => $meta['agence_id'] ?? null,
+        ]);
 
-        // Utiliser la clé FedaPay de l'agence du bien
-        $agenceId = $meta['agence_id'] ?? null;
-        $fedaPay  = $this->fedaPayPour($agenceId);
-
-        try {
-            $result = $fedaPay->createTransaction([
-                'amount'       => (int) $montant,
-                'description'  => $description,
-                'callback_url' => url('/paiement/callback'),
-                'customer'     => [
-                    'firstname'    => $user->prenom ?? $user->name,
-                    'lastname'     => $user->name,
-                    'email'        => $user->email,
-                    'phone_number' => [
-                        'number'  => preg_replace('/\D/', '', $user->telephone ?? '96000001'),
-                        'country' => 'BJ',
-                    ],
-                ],
-            ]);
-
-            session(['fedapay_transaction_id' => $result['transaction_id']]);
-
-            return redirect($result['payment_url']);
-
-        } catch (\Exception $e) {
-            return back()->withErrors(['fedapay' => 'Erreur de paiement : ' . $e->getMessage()]);
-        }
+        return redirect()->route('paiement.kkiapay');
     }
 
-    // ── Callback FedaPay (appelé par FedaPay après paiement) ─────────────────
-    public function callback(Request $request)
+    // ── KKiapay — afficher la page de paiement ────────────────────────────────
+    public function showKkiapay()
     {
-        $transactionId = $request->input('id');
-        if (!$transactionId) {
-            return response()->json(['error' => 'ID manquant'], 400);
+        $pendingKey  = session('pay_pending_key');
+        $montant     = session('pay_montant');
+        $description = session('pay_description');
+        $agenceId    = session('pay_agence_id');
+
+        if (!$pendingKey || !$montant) {
+            return redirect()->route('home')->with('error', 'Session expirée, veuillez recommencer.');
         }
 
-        try {
-            $statut = $this->fedaPay->verifyTransaction((int) $transactionId);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        $agence = $agenceId ? \App\Models\Agence::find($agenceId) : null;
+        $kkiapay = new KKiapayService($agence);
 
-        if ($statut === 'approved') {
-            $this->confirmerPaiement((int) $transactionId);
-        }
+        $kkiapayPublicKey = $kkiapay->getPublicKey();
+        $kkiapaySandbox   = $kkiapay->isSandbox();
 
-        return response()->json(['status' => 'ok']);
+        return view('client.paiement.kkiapay', compact(
+            'montant', 'description', 'pendingKey', 'kkiapayPublicKey', 'kkiapaySandbox'
+        ));
     }
 
-    // ── Page de retour après paiement FedaPay ─────────────────────────────────
-    public function retour(Request $request)
+    // ── KKiapay — confirmer après succès du widget ────────────────────────────
+    public function confirmerKkiapay(Request $request)
     {
-        $transactionId = $request->input('id') ?? session('fedapay_transaction_id');
-        $status        = $request->input('status'); // FedaPay envoie le statut en GET
+        $transactionId = $request->input('transaction_id');
+        $pendingKey    = $request->input('pending_key');
+        $pending       = session($pendingKey);
 
-        // Si FedaPay dit declined/cancelled directement
-        if (in_array($status, ['declined', 'cancelled'])) {
-            session()->forget(['reservation_pending', 'fedapay_pending', 'fedapay_transaction_id']);
+        if (!$pending || !$transactionId) {
+            return redirect()->route('home')->with('error', 'Session expirée.');
+        }
+
+        $agenceId = $pending['agence_id'] ?? null;
+        $agence   = $agenceId ? \App\Models\Agence::find($agenceId) : null;
+        $kkiapay  = new KKiapayService($agence);
+
+        if (!$kkiapay->isApproved($transactionId)) {
             return redirect()->route('home')
-                ->with('error', 'Paiement annulé ou refusé. Aucune réservation n\'a été créée.');
+                ->with('error', 'Paiement non confirmé. Veuillez contacter le support.');
         }
 
-        if ($transactionId) {
-            try {
-                $statut = $this->fedaPay->verifyTransaction((int) $transactionId);
+        $paiement = $this->traiterPaiement($pending, (int) $transactionId);
 
-                if ($statut === 'approved') {
-                    $paiement = $this->confirmerPaiement((int) $transactionId);
-                    if ($paiement) {
-                        return redirect()->route('client.historique')
-                            ->with('success', 'Paiement confirmé ! Référence : ' . $paiement->reference);
-                    }
-                } elseif (in_array($statut, ['declined', 'cancelled'])) {
-                    session()->forget(['reservation_pending', 'fedapay_pending', 'fedapay_transaction_id']);
-                    return redirect()->route('home')
-                        ->with('error', 'Paiement refusé. Aucune réservation n\'a été créée.');
-                }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('FedaPay retour error: ' . $e->getMessage());
-            }
+        session()->forget([$pendingKey, 'pay_pending_key', 'pay_montant', 'pay_description', 'pay_agence_id']);
+
+        if ($paiement) {
+            return redirect()->route('client.historique')
+                ->with('success', 'Paiement confirmé ! Référence : ' . $paiement->reference);
         }
 
-        return redirect()->route('client.historique')
-            ->with('info', 'Votre paiement est en cours de traitement.');
+        return redirect()->route('client.historique')->with('info', 'Paiement traité.');
     }
 
-    // ── Confirmer le paiement et créer les entités ────────────────────────────
-    private function confirmerPaiement(int $transactionId): ?Paiement
+    // ── Traiter le paiement selon l'action ────────────────────────────────────
+    private function traiterPaiement(array $pending, int $transactionId): ?Paiement
     {
-        // Vérifier si déjà traité
-        $existing = Paiement::where('fedapay_transaction_id', $transactionId)->first();
-        if ($existing && $existing->statut === 'confirme') {
-            return $existing;
-        }
-
-        $pending = session('fedapay_pending');
-        if (!$pending) {
-            return null;
-        }
-
-        $action = $pending['action'];
-
-        if ($action === 'reservation') {
-            return $this->creerReservation($pending, $transactionId);
-        } elseif ($action === 'solde') {
-            return $this->confirmerSolde($pending, $transactionId);
-        } elseif ($action === 'complet') {
-            return $this->creerPaiementComplet($pending, $transactionId);
-        }
-
-        return null;
+        return match($pending['action']) {
+            'reservation' => $this->creerReservation($pending, $transactionId),
+            'solde'       => $this->confirmerSolde($pending, $transactionId),
+            'complet'     => $this->creerPaiementComplet($pending, $transactionId),
+            default       => null,
+        };
     }
 
     private function creerReservation(array $pending, int $transactionId): Paiement
     {
         $bien = Bien::findOrFail($pending['bien_id']);
 
-        // Créer le contrat maintenant que le paiement est confirmé
         $contrat = Contrat::create([
-            'bien_id'                                    => $bien->id,
-            'client_id'                                  => $pending['client_id'],
-            'type_contrat'                               => $pending['type_contrat'],
-            'statut_contrat'                             => 'en_attente',
-            'date_contrat'                               => now(),
-            'montant_total_' . $pending['type_contrat']  => $bien->prix,
-            'date_reserv_' . $pending['type_contrat']    => now(),
+            'bien_id'                                       => $bien->id,
+            'client_id'                                     => $pending['client_id'],
+            'type_contrat'                                  => $pending['type_contrat'],
+            'statut_contrat'                                => 'en_attente',
+            'date_contrat'                                  => now(),
+            'montant_total_' . $pending['type_contrat']     => $bien->prix,
+            'date_reserv_' . $pending['type_contrat']       => now(),
             'date_limite_solde_' . $pending['type_contrat'] => $pending['date_limite'],
         ]);
 
-        // Créer le paiement confirmé
         $paiement = Paiement::create([
             'contrat_id'             => $contrat->id,
             'client_id'              => $pending['client_id'],
             'montant'                => $pending['montant'],
             'date_paiement'          => now(),
             'type_paiement'          => 'acompte',
-            'mode_paiement'          => $pending['mode_paiement'],
+            'mode_paiement'          => $pending['mode_paiement'] ?? 'mobile_money',
             'reference'              => $pending['reference'],
             'statut'                 => 'confirme',
             'fedapay_transaction_id' => $transactionId,
         ]);
 
-        // Marquer le bien comme réservé → disparaît du site
         $bien->update(['statut' => 'reserve']);
 
-        // Notification
         NotificationImmogo::create([
             'user_id' => $pending['client_id'],
             'titre'   => 'Réservation confirmée ✓',
-            'message' => 'Votre réservation pour "' . $bien->titre . '" est confirmée. Acompte payé : ' . number_format($pending['montant'], 0, ',', ' ') . ' FCFA. Réf: ' . $pending['reference'],
+            'message' => 'Votre réservation pour "' . $bien->titre . '" est confirmée. Acompte : ' . number_format($pending['montant'], 0, ',', ' ') . ' FCFA. Réf: ' . $pending['reference'],
             'lien'    => route('client.historique'),
         ]);
 
-        session()->forget(['reservation_pending', 'fedapay_pending', 'fedapay_transaction_id']);
-
+        session()->forget('reservation_pending');
         return $paiement;
     }
 
@@ -299,22 +241,17 @@ class PaiementController extends Controller
             'fedapay_transaction_id' => $transactionId,
         ]);
 
-        // Si solde totalement payé
         if ($contrat->getMontantPaye() >= $contrat->getMontantTotal()) {
             $contrat->update(['statut_contrat' => 'actif']);
-            $contrat->bien->update([
-                'statut' => $contrat->type_contrat === 'vente' ? 'vendu' : 'loue',
-            ]);
+            $contrat->bien->update(['statut' => $contrat->type_contrat === 'vente' ? 'vendu' : 'loue']);
         }
 
         NotificationImmogo::create([
             'user_id' => $pending['client_id'],
             'titre'   => 'Paiement confirmé ✓',
-            'message' => 'Votre paiement de ' . number_format($pending['montant'], 0, ',', ' ') . ' FCFA a été confirmé. Réf: ' . $pending['reference'],
+            'message' => 'Paiement de ' . number_format($pending['montant'], 0, ',', ' ') . ' FCFA confirmé. Réf: ' . $pending['reference'],
             'lien'    => route('client.historique'),
         ]);
-
-        session()->forget(['fedapay_pending', 'fedapay_transaction_id']);
 
         return $paiement;
     }
@@ -324,13 +261,13 @@ class PaiementController extends Controller
         $bien = Bien::findOrFail($pending['bien_id']);
 
         $contrat = Contrat::create([
-            'bien_id'                                    => $bien->id,
-            'client_id'                                  => $pending['client_id'],
-            'type_contrat'                               => $pending['type_contrat'],
-            'statut_contrat'                             => 'actif',
-            'date_contrat'                               => now(),
-            'montant_total_' . $pending['type_contrat']  => $bien->prix,
-            'date_reserv_' . $pending['type_contrat']    => now(),
+            'bien_id'                                   => $bien->id,
+            'client_id'                                 => $pending['client_id'],
+            'type_contrat'                              => $pending['type_contrat'],
+            'statut_contrat'                            => 'actif',
+            'date_contrat'                              => now(),
+            'montant_total_' . $pending['type_contrat'] => $bien->prix,
+            'date_reserv_' . $pending['type_contrat']   => now(),
         ]);
 
         $paiement = Paiement::create([
@@ -345,20 +282,26 @@ class PaiementController extends Controller
             'fedapay_transaction_id' => $transactionId,
         ]);
 
-        // Bien disparaît du site
-        $bien->update([
-            'statut' => $pending['type_contrat'] === 'vente' ? 'vendu' : 'loue',
-        ]);
+        $bien->update(['statut' => $pending['type_contrat'] === 'vente' ? 'vendu' : 'loue']);
 
         NotificationImmogo::create([
             'user_id' => $pending['client_id'],
             'titre'   => 'Paiement complet confirmé ✓',
-            'message' => 'Votre paiement complet pour "' . $bien->titre . '" est confirmé. Réf: ' . $pending['reference'],
+            'message' => 'Paiement complet pour "' . $bien->titre . '" confirmé. Réf: ' . $pending['reference'],
             'lien'    => route('client.historique'),
         ]);
 
-        session()->forget(['fedapay_pending', 'fedapay_transaction_id']);
-
         return $paiement;
+    }
+
+    // ── Callback (compatibilité) ──────────────────────────────────────────────
+    public function callback(Request $request)
+    {
+        return response()->json(['status' => 'ok']);
+    }
+
+    public function retour(Request $request)
+    {
+        return redirect()->route('client.historique');
     }
 }

@@ -51,10 +51,11 @@ Route::middleware(['auth', 'role.check:client'])->prefix('client')->name('client
 // Favoris toggle accessible aussi aux visiteurs (redirige vers login si non connecté)
 Route::post('/favoris/{bien}/toggle', [FavoriController::class, 'toggle'])->name('favoris.toggle.guest');
 
-// ── FedaPay callbacks ─────────────────────────────────────────────────────────
+// ── KKiapay — page de paiement et confirmation ────────────────────────────────
+Route::get('/paiement/kkiapay', [PaiementController::class, 'showKkiapay'])->name('paiement.kkiapay')->middleware('auth');
+Route::post('/paiement/kkiapay/confirmer', [PaiementController::class, 'confirmerKkiapay'])->name('paiement.kkiapay.confirmer')->middleware('auth');
 Route::post('/paiement/callback', [PaiementController::class, 'callback'])->name('paiement.callback');
-Route::get('/paiement/callback', [PaiementController::class, 'retour'])->name('paiement.callback.get');
-Route::get('/paiement/retour', [PaiementController::class, 'retour'])->name('paiement.retour')->middleware('auth');
+Route::get('/paiement/retour', [PaiementController::class, 'retour'])->name('paiement.retour');
 
 // ─── Espace Admin Agence ──────────────────────────────────────────────────────
 Route::middleware(['auth', 'role.check:admin_agence'])->prefix('admin')->name('admin.')->group(function () {

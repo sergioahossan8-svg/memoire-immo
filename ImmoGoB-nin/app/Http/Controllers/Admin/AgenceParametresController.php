@@ -9,7 +9,6 @@ class AgenceParametresController extends Controller
 {
     public function index()
     {
-        // Seul l'admin principal peut accéder
         abort_if(!auth()->user()->est_principal, 403, 'Accès réservé à l\'administrateur principal.');
         $agence = auth()->user()->agence;
         return view('admin.agence-parametres', compact('agence'));
@@ -25,12 +24,10 @@ class AgenceParametresController extends Controller
             'nom_commercial'     => 'required|string|max:200',
             'telephone'          => 'nullable|string|max:20',
             'logo'               => 'nullable|image|max:2048',
-            'fedapay_secret_key' => ['nullable', 'string', 'max:100', function($attr, $val, $fail) {
-                if (!empty($val) && str_starts_with($val, 'pk_')) {
-                    $fail('Vous avez saisi la clé PUBLIQUE. Veuillez saisir la clé SECRÈTE (commence par sk_).');
-                }
-            }],
-            'fedapay_env'        => 'nullable|in:sandbox,live',
+            'kkiapay_public_key' => 'nullable|string|max:100',
+            'kkiapay_private_key'=> 'nullable|string|max:100',
+            'kkiapay_secret'     => 'nullable|string|max:100',
+            'kkiapay_sandbox'    => 'nullable',
         ]);
 
         if ($request->hasFile('logo')) {
@@ -40,10 +37,11 @@ class AgenceParametresController extends Controller
             $data['logo'] = $request->file('logo')->store('agences', 'public');
         }
 
-        // Ne pas écraser la clé FedaPay si le champ est vide ou masqué
-        if (empty($data['fedapay_secret_key']) || str_contains($data['fedapay_secret_key'] ?? '', '•')) {
-            unset($data['fedapay_secret_key']);
-        }
+        // Ne pas écraser les clés si laissées vides
+        if (empty($data['kkiapay_private_key'])) unset($data['kkiapay_private_key']);
+        if (empty($data['kkiapay_secret']))       unset($data['kkiapay_secret']);
+
+        $data['kkiapay_sandbox'] = $request->input('kkiapay_sandbox', '1') === '1';
 
         $agence->update($data);
 

@@ -45,14 +45,19 @@ Route::middleware(['auth:sanctum', 'api.role:client'])->group(function () {
     // Réservation
     Route::post('/biens/{bien}/reserver', [ContratApiController::class, 'reserver']);
 
-    // Paiements
+    // Paiements KKiapay
+    // 1. Initier le paiement → retourne la clé publique KKiapay + données
     Route::post('/biens/{bien}/payer-complet', [PaiementApiController::class, 'payerComplet']);
     Route::post('/contrats/{contrat}/payer-solde', [PaiementApiController::class, 'payerSolde']);
+    Route::post('/biens/{bien}/init-reservation', [PaiementApiController::class, 'initReservation']);
+
+    // 2. Confirmer après succès du widget KKiapay (mobile envoie transaction_id)
+    Route::post('/paiement/confirmer', [PaiementApiController::class, 'confirmerKkiapay']);
 
     // Notifications
     Route::get('/notifications', [NotificationApiController::class, 'index']);
     Route::post('/notifications/lire', [NotificationApiController::class, 'marquerLues']);
 });
 
-// ── FedaPay callback (sans auth — appelé par FedaPay) ──────────────────────
+// ── KKiapay callback webhook (sans auth) ───────────────────────────────────
 Route::post('/paiement/callback', [PaiementApiController::class, 'callback']);
