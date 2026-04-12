@@ -12,8 +12,9 @@ class ApiService {
   late final Dio dio = Dio(
     BaseOptions(
       baseUrl: dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8000/api',
-      connectTimeout: const Duration(seconds: 15),
+      connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
+      sendTimeout: const Duration(seconds: 30),
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -21,16 +22,17 @@ class ApiService {
     ),
   )..interceptors.addAll([
       _AuthInterceptor(_storage),
+      // Log seulement en debug
       LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        logPrint: (obj) => print(obj), // activer logs pour debug
+        requestBody: false,
+        responseBody: false,
+        logPrint: (obj) => print(obj),
       ),
     ]);
 
   ApiService._internal() {
     final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8000/api';
-    print('🌐 API_BASE_URL configurée: $baseUrl');
+    print('🌐 API_BASE_URL: $baseUrl');
   }
 }
 
@@ -42,7 +44,7 @@ class _AuthInterceptor extends Interceptor {
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
     final token = await _storage.read(key: 'auth_token');
-    if (token != null) {
+    if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
     handler.next(options);
@@ -79,17 +81,18 @@ String extractErrorMessage(DioException e) {
     case 404:
       return 'Ressource introuvable.';
     case 422:
-      return 'Données invalides.';
+      return 'Données invalides. Vérifiez les champs.';
     case 500:
       return 'Erreur serveur. Réessayez plus tard.';
     default:
       if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout) {
         return 'Délai de connexion dépassé. Vérifiez votre réseau.';
       }
       if (e.type == DioExceptionType.connectionError) {
         return 'Impossible de joindre le serveur. Vérifiez votre connexion.';
       }
-      return 'Une erreur est survenue.';
+      return 'Une erreur est survenue. Réessayez.';
   }
 }

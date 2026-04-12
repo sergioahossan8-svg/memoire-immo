@@ -29,9 +29,9 @@
             </div>
         </div>
 
-        @if($errors->has('fedapay'))
+        @if($errors->has('kkiapay'))
             <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">
-                <i class="fas fa-exclamation-circle mr-1"></i> {{ $errors->first('fedapay') }}
+                <i class="fas fa-exclamation-circle mr-1"></i> {{ $errors->first('kkiapay') }}
             </div>
         @endif
 
@@ -51,19 +51,19 @@
                 <input type="hidden" name="type_contrat" value="{{ $bien->transaction }}">
             </div>
 
-            {{-- FedaPay badge --}}
+            {{-- KKiapay badge --}}
             <div class="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
                 <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-shield-alt text-blue-500"></i>
                 </div>
                 <div>
-                    <p class="text-sm font-semibold text-gray-800">Paiement sécurisé via FedaPay</p>
+                    <p class="text-sm font-semibold text-gray-800">Paiement sécurisé via KKiapay</p>
                     <p class="text-xs text-gray-500">Mobile Money (MTN, Moov), carte bancaire et plus</p>
                 </div>
             </div>
 
             <button type="submit" class="btn-primary w-full">
-                <i class="fas fa-lock"></i> Payer {{ $bien->prix_formate }} avec FedaPay
+                <i class="fas fa-lock"></i> Payer {{ $bien->prix_formate }} avec KKiapay
             </button>
             <a href="{{ route('biens.show', $bien) }}" class="btn-secondary w-full text-center block">Annuler</a>
         </form>

@@ -6,7 +6,7 @@
 <div class="max-w-2xl mx-auto px-4 py-8">
     <div class="card p-8">
         <h1 class="text-2xl font-bold text-gray-800 mb-2">Paiement</h1>
-        <p class="text-gray-500 text-sm mb-6">Vous allez être redirigé vers FedaPay pour effectuer votre paiement en toute sécurité.</p>
+        <p class="text-gray-500 text-sm mb-6">Vous allez être redirigé vers KKiapay pour effectuer votre paiement en toute sécurité.</p>
 
         {{-- Récap montants --}}
         <div class="grid grid-cols-3 gap-4 mb-6">
@@ -24,10 +24,10 @@
             </div>
         </div>
 
-        @if(session('error') || $errors->has('fedapay'))
+        @if(session('error') || $errors->has('kkiapay'))
             <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">
                 <i class="fas fa-exclamation-circle mr-1"></i>
-                {{ session('error') ?? $errors->first('fedapay') }}
+                {{ session('error') ?? $errors->first('kkiapay') }}
             </div>
         @endif
 
@@ -52,19 +52,19 @@
                     min="1" required>
             </div>
 
-            {{-- FedaPay badge --}}
+            {{-- KKiapay badge --}}
             <div class="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
                 <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-shield-alt text-blue-500"></i>
                 </div>
                 <div>
-                    <p class="text-sm font-semibold text-gray-800">Paiement sécurisé via FedaPay</p>
+                    <p class="text-sm font-semibold text-gray-800">Paiement sécurisé via KKiapay</p>
                     <p class="text-xs text-gray-500">Mobile Money (MTN, Moov), carte bancaire et plus</p>
                 </div>
             </div>
 
             <button type="submit" class="btn-primary w-full">
-                <i class="fas fa-lock"></i> Payer maintenant avec FedaPay
+                <i class="fas fa-lock"></i> Payer maintenant avec KKiapay
             </button>
             <a href="{{ route('client.historique') }}" class="btn-secondary w-full text-center block">Annuler</a>
         </form>

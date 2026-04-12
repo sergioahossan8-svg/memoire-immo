@@ -27,7 +27,7 @@ class ContratController extends Controller
         return view('client.reservation', compact('bien', 'acompte'));
     }
 
-    // Soumet le formulaire → va directement vers FedaPay SANS créer le contrat
+    // Soumet le formulaire → va directement vers KKiapay SANS créer le contrat
     public function reserver(Request $request, Bien $bien)
     {
         abort_if($bien->statut !== 'disponible' || !$bien->is_published, 422, 'Ce bien n\'est plus disponible.');
@@ -38,7 +38,7 @@ class ContratController extends Controller
             'mode_paiement' => 'required|in:mobile_money,virement,especes,carte',
         ]);
 
-        // Stocker les infos en session — le contrat sera créé APRÈS confirmation FedaPay
+        // Stocker les infos en session — le contrat sera créé APRÈS confirmation KKiapay
         session([
             'reservation_pending' => [
                 'bien_id'       => $bien->id,
@@ -50,7 +50,7 @@ class ContratController extends Controller
             ]
         ]);
 
-        // Rediriger vers FedaPay via PaiementController
+        // Rediriger vers KKiapay via PaiementController
         return redirect()->route('client.payer.reservation', $bien);
     }
 }

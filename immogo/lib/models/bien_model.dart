@@ -11,7 +11,6 @@ class BienModel {
   final int? sallesBain;
   final String transaction;
   final String statut;
-  final bool isPremium;
   final String? photo;
   final String? typeBien;
   final String? agence;
@@ -32,7 +31,6 @@ class BienModel {
     this.sallesBain,
     required this.transaction,
     required this.statut,
-    required this.isPremium,
     this.photo,
     this.typeBien,
     this.agence,
@@ -53,7 +51,6 @@ class BienModel {
         sallesBain: json['salles_bain'],
         transaction: json['transaction'] ?? '',
         statut: json['statut'] ?? '',
-        isPremium: json['is_premium'] == true,
         photo: json['photo'],
         typeBien: json['type_bien'],
         agence: json['agence'],

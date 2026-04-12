@@ -14,6 +14,7 @@ import 'screens/contrats/reservation_screen.dart';
 import 'screens/contrats/contrat_detail_screen.dart';
 import 'screens/paiement/paiement_webview_screen.dart';
 import 'screens/paiement/paiement_confirmation_screen.dart';
+import 'screens/paiement/kkiapay_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -80,6 +81,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             contratId: state.uri.queryParameters['contrat_id'] != null
                 ? int.tryParse(state.uri.queryParameters['contrat_id']!)
                 : null),
+      ),
+      GoRoute(
+        path: '/paiement/kkiapay',
+        builder: (_, state) => KkiapayScreen(
+          data: (state.extra as Map<String, dynamic>?) ?? {},
+        ),
       ),
       GoRoute(
         path: '/paiement/confirmation',

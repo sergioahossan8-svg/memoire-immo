@@ -60,31 +60,59 @@
     const CLIENT_PHONE = "{{ preg_replace('/\D/', '', auth()->user()->telephone ?? '') }}";
     const CLIENT_NOM   = "{{ auth()->user()->prenom }} {{ auth()->user()->name }}";
 
-    function lancerKkiapay() {
+    function ouvrirWidgetKkiapay() {
         if (!KKIAPAY_KEY || KKIAPAY_KEY.length < 10) {
             document.getElementById('errorText').textContent = 'Clé KKiapay non configurée. Veuillez contacter l\'administrateur.';
             document.getElementById('errorMsg').classList.remove('hidden');
             return;
         }
+        // Attendre que le SDK soit prêt si le script加载较慢
+        const essayer = () => {
+            if (typeof openKkiapayWidget !== 'function') {
+                setTimeout(essayer, 200);
+                return;
+            }
+            openKkiapayWidget({
+                amount:  MONTANT,
+                api_key: KKIAPAY_KEY,
+                sandbox: SANDBOX,
+                email:   CLIENT_EMAIL,
+                phone:   CLIENT_PHONE,
+                name:    CLIENT_NOM,
+                currency: 'XOF',
+                callback_url: "{{ route('paiement.retour') }}",
+            });
+        };
+        essayer();
+    }
 
-        openKkiapayWidget({
-            amount:  MONTANT,
-            api_key: KKIAPAY_KEY,
-            sandbox: SANDBOX,
-            email:   CLIENT_EMAIL,
-            phone:   CLIENT_PHONE,
-            name:    CLIENT_NOM,
+    // 兼容两种事件机制：函数监听与自定义事件
+    if (typeof addSuccessListener === 'function') {
+        addSuccessListener(function(response) {
+            document.getElementById('kkiapayTransactionId').value = response.transactionId;
+            document.getElementById('confirmForm').submit();
+        });
+        addFailedListener(function(error) {
+            document.getElementById('errorText').textContent = 'Paiement échoué : ' + (error.message || 'Veuillez réessayer.');
+            document.getElementById('errorMsg').classList.remove('hidden');
+        });
+    } else {
+        window.addEventListener('kkiapay.success', function(e) {
+            const response = e.detail || {};
+            document.getElementById('kkiapayTransactionId').value = response.transactionId;
+            document.getElementById('confirmForm').submit();
+        });
+        window.addEventListener('kkiapay.fail', function(e) {
+            const error = e.detail || {};
+            document.getElementById('errorText').textContent = 'Paiement échoué : ' + (error.message || 'Veuillez réessayer.');
+            document.getElementById('errorMsg').classList.remove('hidden');
         });
     }
 
-    addSuccessListener(function(response) {
-        document.getElementById('kkiapayTransactionId').value = response.transactionId;
-        document.getElementById('confirmForm').submit();
-    });
-
-    addFailedListener(function(error) {
-        document.getElementById('errorText').textContent = 'Paiement échoué : ' + (error.message || 'Veuillez réessayer.');
-        document.getElementById('errorMsg').classList.remove('hidden');
+    // 绑定按钮点击
+    document.getElementById('payBtn').addEventListener('click', function(ev) {
+        ev.preventDefault();
+        ouvrirWidgetKkiapay();
     });
 </script>
 @endpush

@@ -28,8 +28,10 @@ class ApiConstants {
   static const String historique = '/historique';
   static String contratDetail(int id) => '/contrats/$id';
   static String reserver(int bienId) => '/biens/$bienId/reserver';
+  static String initReservation(int bienId) => '/biens/$bienId/init-reservation';
   static String payerComplet(int bienId) => '/biens/$bienId/payer-complet';
   static String payerSolde(int contratId) => '/contrats/$contratId/payer-solde';
+  static const String confirmerKkiapay = '/paiement/confirmer';
 
   // Profil
   static const String profil = '/profil';

@@ -9,7 +9,7 @@ class Paiement extends Model
     protected $fillable = [
         'contrat_id', 'client_id', 'montant', 'date_paiement',
         'type_paiement', 'mode_paiement', 'reference', 'statut',
-        'fedapay_transaction_id', 'fedapay_token',
+        'kkiapay_transaction_id',
     ];
 
     protected function casts(): array

@@ -9,6 +9,7 @@ use App\Models\NotificationImmogo;
 use App\Models\Paiement;
 use App\Services\KKiapayService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class PaiementApiController extends Controller
@@ -68,16 +69,19 @@ class PaiementApiController extends Controller
 
     /**
      * Initier le paiement de l'acompte après réservation
+     * Le mobile envoie la reservation_key reçue lors de l'étape reserver()
      */
-    public function initReservation(Bien $bien)
+    public function initReservation(Request $request, Bien $bien)
     {
         if ($bien->statut !== 'disponible' || !$bien->is_published) {
             return response()->json(['message' => 'Ce bien n\'est plus disponible.'], 422);
         }
 
-        $pending = session('reservation_pending');
+        $reservationKey = $request->input('reservation_key');
+        $pending        = $reservationKey ? Cache::get($reservationKey) : null;
+
         if (!$pending || $pending['bien_id'] !== $bien->id) {
-            return response()->json(['message' => 'Session expirée. Recommencez la réservation.'], 422);
+            return response()->json(['message' => 'Réservation introuvable ou expirée. Recommencez la réservation.'], 422);
         }
 
         return $this->initierKkiapay(
@@ -85,26 +89,27 @@ class PaiementApiController extends Controller
             description:  'Acompte réservation (10%) - ' . $bien->titre,
             typePaiement: 'acompte',
             meta: [
-                'action'        => 'reservation',
-                'bien_id'       => $bien->id,
-                'agence_id'     => $bien->agence_id,
-                'type_contrat'  => $pending['type_contrat'],
-                'date_limite'   => $pending['date_limite'],
-                'mode_paiement' => $pending['mode_paiement'],
+                'action'          => 'reservation',
+                'bien_id'         => $bien->id,
+                'agence_id'       => $bien->agence_id,
+                'type_contrat'    => $pending['type_contrat'],
+                'date_limite'     => $pending['date_limite'],
+                'mode_paiement'   => $pending['mode_paiement'],
+                'reservation_key' => $reservationKey,
             ]
         );
     }
 
     /**
-     * Préparer les données KKiapay et retourner la clé publique au mobile
-     * Le mobile utilise cette clé pour ouvrir le widget KKiapay
+     * Préparer les données KKiapay et stocker le pending dans le cache (stateless)
+     * Le mobile utilise la clé publique pour ouvrir le widget KKiapay
      */
     private function initierKkiapay(float $montant, string $description, string $typePaiement, array $meta)
     {
-        $user      = auth()->user();
-        $reference = 'PAY-' . strtoupper(Str::random(10));
+        $user       = auth()->user();
+        $reference  = 'PAY-' . strtoupper(Str::random(10));
+        $pendingKey = 'pay_' . Str::random(24);
 
-        $pendingKey  = 'pay_' . Str::random(20);
         $pendingData = array_merge($meta, [
             'reference'     => $reference,
             'montant'       => $montant,
@@ -112,13 +117,8 @@ class PaiementApiController extends Controller
             'client_id'     => $user->id,
         ]);
 
-        session([
-            $pendingKey       => $pendingData,
-            'pay_pending_key' => $pendingKey,
-            'pay_montant'     => $montant,
-            'pay_description' => $description,
-            'pay_agence_id'   => $meta['agence_id'] ?? null,
-        ]);
+        // Stocker dans le cache (TTL 30 min) — pas de session, compatible API stateless
+        Cache::put($pendingKey, $pendingData, now()->addMinutes(30));
 
         // Récupérer les clés KKiapay de l'agence
         $agenceId = $meta['agence_id'] ?? null;
@@ -145,10 +145,10 @@ class PaiementApiController extends Controller
     {
         $transactionId = $request->input('transaction_id');
         $pendingKey    = $request->input('pending_key');
-        $pending       = session($pendingKey);
+        $pending       = $pendingKey ? Cache::get($pendingKey) : null;
 
         if (!$pending || !$transactionId) {
-            return response()->json(['message' => 'Session expirée ou transaction manquante.'], 422);
+            return response()->json(['message' => 'Données de paiement introuvables ou expirées.'], 422);
         }
 
         // Vérifier la transaction côté serveur avec les clés de l'agence
@@ -161,10 +161,13 @@ class PaiementApiController extends Controller
         }
 
         // Traiter le paiement
-        session(['fedapay_pending' => $pending]); // compatibilité avec les méthodes existantes
         $paiement = $this->traiterPaiement($pending, (int) $transactionId);
 
-        session()->forget([$pendingKey, 'pay_pending_key', 'pay_montant', 'pay_description', 'pay_agence_id']);
+        // Nettoyer le cache
+        Cache::forget($pendingKey);
+        if (!empty($pending['reservation_key'])) {
+            Cache::forget($pending['reservation_key']);
+        }
 
         if ($paiement) {
             return response()->json([
@@ -219,7 +222,7 @@ class PaiementApiController extends Controller
             'mode_paiement'          => $pending['mode_paiement'] ?? 'mobile_money',
             'reference'              => $pending['reference'],
             'statut'                 => 'confirme',
-            'fedapay_transaction_id' => $transactionId,
+            'kkiapay_transaction_id' => $transactionId,
         ]);
 
         $bien->update(['statut' => 'reserve']);
@@ -231,7 +234,6 @@ class PaiementApiController extends Controller
             'lien'    => '/client/historique',
         ]);
 
-        session()->forget('reservation_pending');
         return $paiement;
     }
 
@@ -248,7 +250,7 @@ class PaiementApiController extends Controller
             'mode_paiement'          => 'mobile_money',
             'reference'              => $pending['reference'],
             'statut'                 => 'confirme',
-            'fedapay_transaction_id' => $transactionId,
+            'kkiapay_transaction_id' => $transactionId,
         ]);
 
         if ($contrat->getMontantPaye() >= $contrat->getMontantTotal()) {
@@ -289,7 +291,7 @@ class PaiementApiController extends Controller
             'mode_paiement'          => 'mobile_money',
             'reference'              => $pending['reference'],
             'statut'                 => 'confirme',
-            'fedapay_transaction_id' => $transactionId,
+            'kkiapay_transaction_id' => $transactionId,
         ]);
 
         $bien->update(['statut' => $pending['type_contrat'] === 'vente' ? 'vendu' : 'loue']);

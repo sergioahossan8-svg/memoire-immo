@@ -33,8 +33,10 @@ class BienDetailScreen extends ConsumerWidget {
         data: (data) {
           final bien = data['bien'] as BienModel;
           final similaires = data['similaires'] as List<BienModel>;
+          // watch pour être réactif aux changements de favoris
+          final favorisState = isAuth ? ref.watch(favoriProvider) : null;
           final isFavori = isAuth
-              ? ref.read(favoriProvider.notifier).isFavori(bien.id)
+              ? (favorisState?.valueOrNull?.any((b) => b.id == bien.id) ?? false)
               : false;
           final photos = bien.photos ?? [];
           final allPhotos = photos.isNotEmpty
@@ -84,24 +86,8 @@ class BienDetailScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Badge premium + transaction
+                      // Badge transaction
                       Row(children: [
-                        if (bien.isPremium) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.premium,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text('PREMIUM',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold)),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),

@@ -6,6 +6,17 @@ import 'api_service.dart';
 class PaiementService {
   final Dio _dio = ApiService().dio;
 
+  Future<Map<String, dynamic>> initReservation({
+    required int bienId,
+    required String reservationKey,
+  }) async {
+    final response =
+        await _dio.post(ApiConstants.initReservation(bienId), data: {
+      'reservation_key': reservationKey,
+    });
+    return response.data as Map<String, dynamic>;
+  }
+
   Future<Map<String, dynamic>> payerComplet({
     required int bienId,
     required String typeContrat,

@@ -35,16 +35,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       : super(const AuthState(status: AuthStatus.loading));
 
   Future<void> checkAuth() async {
-    print('🔍 AuthProvider: checkAuth démarré');
     try {
       final user = await _authService.me();
-      print('👤 AuthProvider: user = ${user?.email ?? "null"}');
       state = user != null
           ? AuthState(status: AuthStatus.authenticated, user: user)
           : const AuthState(status: AuthStatus.unauthenticated);
-      print('✅ AuthProvider: state = ${state.status}');
     } catch (e) {
-      print('❌ AuthProvider: Erreur = $e');
       state = const AuthState(status: AuthStatus.unauthenticated);
     }
   }
@@ -53,13 +49,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading);
     try {
       final data = await _authService.login(email, password);
-      final user =
-          UserModel.fromJson(data['user'] as Map<String, dynamic>);
+      final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
       state = AuthState(status: AuthStatus.authenticated, user: user);
     } on DioException catch (e) {
       final msg = extractErrorMessage(e);
       state = AuthState(
           status: AuthStatus.error, errorMessage: msg, user: state.user);
+    } catch (e) {
+      state = AuthState(
+          status: AuthStatus.error,
+          errorMessage: 'Une erreur est survenue. Réessayez.',
+          user: state.user);
     }
   }
 
@@ -85,13 +85,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
         telephone: telephone,
         adresse: adresse,
       );
-      final user =
-          UserModel.fromJson(data['user'] as Map<String, dynamic>);
+      final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
       state = AuthState(status: AuthStatus.authenticated, user: user);
     } on DioException catch (e) {
       final msg = extractErrorMessage(e);
       state = AuthState(
           status: AuthStatus.error, errorMessage: msg, user: state.user);
+    } catch (e) {
+      state = AuthState(
+          status: AuthStatus.error,
+          errorMessage: 'Une erreur est survenue. Réessayez.',
+          user: state.user);
     }
   }
 
@@ -101,8 +105,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   void updateUser(UserModel user) {
-    state = state.copyWith(
-        status: AuthStatus.authenticated, user: user);
+    state = state.copyWith(status: AuthStatus.authenticated, user: user);
   }
 }
 

@@ -54,26 +54,45 @@ class AuthService {
     }
   }
 
-  Future<UserModel?> me() async {
-    print('🔑 AuthService: Lecture du token...');
+  /// Vérifie si un token est stocké localement (instantané, sans réseau)
+  Future<bool> hasLocalToken() async {
     final token = await _storage.read(key: 'auth_token');
-    print('🔑 AuthService: Token = ${token != null ? "présent" : "absent"}');
-    if (token == null) return null;
+    return token != null && token.isNotEmpty;
+  }
+
+  /// Supprime le token local (déconnexion locale)
+  Future<void> clearToken() async {
+    await _storage.delete(key: 'auth_token');
+  }
+
+  Future<UserModel?> me() async {
+    final token = await _storage.read(key: 'auth_token');
+    if (token == null || token.isEmpty) return null;
+
     try {
-      print('📡 AuthService: Appel API /me...');
-      final response = await _dio.get(ApiConstants.me);
-      print('✅ AuthService: Réponse reçue');
-      return UserModel.fromJson(
-          response.data['user'] as Map<String, dynamic>);
+      final response = await _dio.get(
+        ApiConstants.me,
+        options: Options(
+          receiveTimeout: const Duration(seconds: 20),
+          sendTimeout: const Duration(seconds: 20),
+        ),
+      );
+      return UserModel.fromJson(response.data['user'] as Map<String, dynamic>);
     } on DioException catch (e) {
-      print('❌ AuthService: Erreur ${e.response?.statusCode} - ${e.message}');
-      if (e.response?.statusCode == 401) return null;
-      rethrow;
+      if (e.response?.statusCode == 401) {
+        // Token expiré → supprimer
+        await _storage.delete(key: 'auth_token');
+        return null;
+      }
+      // Erreur réseau/timeout → on considère unauthenticated sans crasher
+      return null;
+    } catch (_) {
+      return null;
     }
   }
 
   Future<bool> isLoggedIn() async {
     final token = await _storage.read(key: 'auth_token');
-    return token != null;
+    return token != null && token.isNotEmpty;
   }
 }

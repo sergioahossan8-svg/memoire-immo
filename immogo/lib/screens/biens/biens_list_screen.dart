@@ -235,10 +235,12 @@ class _BiensListScreenState extends ConsumerState<BiensListScreen> {
                               );
                             }
                             final bien = state.biens[index];
+                            // watch pour être réactif aux changements de favoris
+                            final favorisState = ref.watch(favoriProvider);
                             final isFavori = isAuth
-                                ? ref
-                                    .read(favoriProvider.notifier)
-                                    .isFavori(bien.id)
+                                ? (favorisState.valueOrNull
+                                        ?.any((b) => b.id == bien.id) ??
+                                    false)
                                 : false;
                             return Padding(
                               padding:

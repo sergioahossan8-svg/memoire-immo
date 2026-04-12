@@ -23,13 +23,17 @@ class BienCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenW = MediaQuery.of(context).size.width;
+    final imgHeight = screenW * 0.48;
+
     return GestureDetector(
       onTap: onTap,
       child: Card(
+        margin: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
+            // Image + badges
             Stack(
               children: [
                 ClipRRect(
@@ -38,65 +42,46 @@ class BienCard extends StatelessWidget {
                   child: bien.photo != null
                       ? CachedNetworkImage(
                           imageUrl: bien.photo!,
-                          height: 180,
+                          height: imgHeight,
                           width: double.infinity,
                           fit: BoxFit.cover,
                           placeholder: (_, __) => Container(
-                            height: 180,
+                            height: imgHeight,
                             color: Colors.grey[200],
                             child: const Center(
-                                child: CircularProgressIndicator()),
+                                child: CircularProgressIndicator(strokeWidth: 2)),
                           ),
-                          errorWidget: (_, __, ___) => _noPhoto(),
+                          errorWidget: (_, __, ___) => _noPhoto(imgHeight),
                         )
-                      : _noPhoto(),
+                      : _noPhoto(imgHeight),
                 ),
-                // Badge premium
-                if (bien.isPremium)
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.premium,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text('PREMIUM',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold)),
-                    ),
-                  ),
                 // Bouton favori
                 if (showFavoriButton)
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                            isFavori
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: isFavori ? Colors.red : Colors.grey),
-                        onPressed: onFavoriTap,
-                        iconSize: 20,
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(8),
+                    child: Material(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      shape: const CircleBorder(),
+                      elevation: 2,
+                      child: InkWell(
+                        onTap: onFavoriTap,
+                        customBorder: const CircleBorder(),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(
+                            isFavori ? Icons.favorite : Icons.favorite_border,
+                            color: isFavori ? Colors.red : Colors.grey[600],
+                            size: 20,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 // Badge transaction
                 Positioned(
                   bottom: 8,
-                  right: 8,
+                  left: 8,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 4),
@@ -132,7 +117,7 @@ class BienCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(children: [
                     const Icon(Icons.location_on,
-                        size: 14, color: AppColors.textSecondary),
+                        size: 13, color: AppColors.textSecondary),
                     const SizedBox(width: 2),
                     Expanded(
                       child: Text(
@@ -147,31 +132,37 @@ class BienCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        bien.prixFormate.isNotEmpty
-                            ? bien.prixFormate
-                            : Formatters.prix(bien.prix),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: AppColors.accent,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      Flexible(
+                        child: Text(
+                          bien.prixFormate.isNotEmpty
+                              ? bien.prixFormate
+                              : Formatters.prix(bien.prix),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: AppColors.accent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       Row(children: [
                         if (bien.chambres != null) ...[
                           const Icon(Icons.bed,
-                              size: 14, color: AppColors.textSecondary),
+                              size: 13, color: AppColors.textSecondary),
                           Text(' ${bien.chambres}',
                               style:
                                   Theme.of(context).textTheme.bodyMedium),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                         ],
                         if (bien.superficie != null) ...[
                           const Icon(Icons.square_foot,
-                              size: 14, color: AppColors.textSecondary),
+                              size: 13, color: AppColors.textSecondary),
                           Text(
-                              ' ${bien.superficie!.toStringAsFixed(0)}m²',
-                              style:
-                                  Theme.of(context).textTheme.bodyMedium),
+                            ' ${bien.superficie!.toStringAsFixed(0)}m²',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                         ],
                       ]),
                     ],
@@ -185,10 +176,10 @@ class BienCard extends StatelessWidget {
     );
   }
 
-  Widget _noPhoto() => Container(
-        height: 180,
+  Widget _noPhoto(double height) => Container(
+        height: height,
+        width: double.infinity,
         color: Colors.grey[200],
-        child:
-            const Icon(Icons.home_work_rounded, size: 60, color: Colors.grey),
+        child: const Icon(Icons.home_work_rounded, size: 60, color: Colors.grey),
       );
 }

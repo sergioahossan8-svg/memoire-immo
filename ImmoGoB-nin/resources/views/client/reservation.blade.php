@@ -79,14 +79,14 @@
                 </select>
             </div>
 
-            {{-- FedaPay badge --}}
+            {{-- KKiapay badge --}}
             <div class="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
                 <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-shield-alt text-blue-500"></i>
                 </div>
                 <div>
-                    <p class="text-sm font-semibold text-gray-800">Paiement sécurisé via FedaPay</p>
-                    <p class="text-xs text-gray-500">Vous serez redirigé vers FedaPay pour effectuer le paiement.</p>
+                    <p class="text-sm font-semibold text-gray-800">Paiement sécurisé via KKiapay</p>
+                    <p class="text-xs text-gray-500">Vous serez redirigé vers KKiapay pour effectuer le paiement.</p>
                 </div>
             </div>
 

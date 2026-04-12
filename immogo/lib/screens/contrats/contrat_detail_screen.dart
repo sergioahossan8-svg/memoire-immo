@@ -124,29 +124,32 @@ class ContratDetailScreen extends ConsumerWidget {
   Widget _statutCard(BuildContext context, ContratModel contrat) {
     final color = _statutColor(contrat.statutContrat);
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(children: [
         Icon(_statutIcon(contrat.statutContrat), color: color, size: 28),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(Formatters.statut(contrat.statutContrat),
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(color: color)),
-            Text(Formatters.transaction(contrat.typeContrat),
-                style: Theme.of(context).textTheme.bodyMedium),
-            if (contrat.dateContrat != null)
-              Text('Le ${contrat.dateContrat}',
-                  style: Theme.of(context).textTheme.labelSmall),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(Formatters.statut(contrat.statutContrat),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(color: color)),
+              Text(Formatters.transaction(contrat.typeContrat),
+                  style: Theme.of(context).textTheme.bodyMedium),
+              if (contrat.dateContrat != null)
+                Text('Le ${contrat.dateContrat}',
+                    style: Theme.of(context).textTheme.labelSmall),
+            ],
+          ),
         ),
       ]),
     );
@@ -188,7 +191,12 @@ class ContratDetailScreen extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodyLarge),
+        Flexible(
+          child: Text(label,
+              style: Theme.of(context).textTheme.bodyLarge,
+              overflow: TextOverflow.ellipsis),
+        ),
+        const SizedBox(width: 8),
         Text(
           value,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -206,32 +214,36 @@ class ContratDetailScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isConfirme
-            ? AppColors.success.withOpacity(0.07)
+            ? AppColors.success.withValues(alpha: 0.07)
             : Colors.grey[50],
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
             color: isConfirme
-                ? AppColors.success.withOpacity(0.3)
+                ? AppColors.success.withValues(alpha: 0.3)
                 : AppColors.divider),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                  '${p.typePaiement.toUpperCase()} — ${p.modePaiement ?? ''}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600)),
-              if (p.reference != null)
-                Text('Réf: ${p.reference}',
-                    style: Theme.of(context).textTheme.labelSmall),
-              if (p.datePaiement != null)
-                Text(p.datePaiement!,
-                    style: Theme.of(context).textTheme.labelSmall),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                    '${p.typePaiement.toUpperCase()} — ${p.modePaiement ?? ''}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600),
+                    overflow: TextOverflow.ellipsis),
+                if (p.reference != null)
+                  Text('Réf: ${p.reference}',
+                      style: Theme.of(context).textTheme.labelSmall,
+                      overflow: TextOverflow.ellipsis),
+                if (p.datePaiement != null)
+                  Text(p.datePaiement!,
+                      style: Theme.of(context).textTheme.labelSmall),
+              ],
+            ),
           ),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -246,7 +258,7 @@ class ContratDetailScreen extends ConsumerWidget {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: isConfirme
-                      ? AppColors.success.withOpacity(0.15)
+                      ? AppColors.success.withValues(alpha: 0.15)
                       : Colors.grey[200],
                   borderRadius: BorderRadius.circular(20),
                 ),

@@ -209,7 +209,7 @@ class PaiementController extends Controller
             'mode_paiement'          => $pending['mode_paiement'] ?? 'mobile_money',
             'reference'              => $pending['reference'],
             'statut'                 => 'confirme',
-            'fedapay_transaction_id' => $transactionId,
+            'kkiapay_transaction_id' => $transactionId,
         ]);
 
         $bien->update(['statut' => 'reserve']);
@@ -221,7 +221,6 @@ class PaiementController extends Controller
             'lien'    => route('client.historique'),
         ]);
 
-        session()->forget('reservation_pending');
         return $paiement;
     }
 
@@ -238,7 +237,7 @@ class PaiementController extends Controller
             'mode_paiement'          => 'mobile_money',
             'reference'              => $pending['reference'],
             'statut'                 => 'confirme',
-            'fedapay_transaction_id' => $transactionId,
+            'kkiapay_transaction_id' => $transactionId,
         ]);
 
         if ($contrat->getMontantPaye() >= $contrat->getMontantTotal()) {
@@ -279,7 +278,7 @@ class PaiementController extends Controller
             'mode_paiement'          => 'mobile_money',
             'reference'              => $pending['reference'],
             'statut'                 => 'confirme',
-            'fedapay_transaction_id' => $transactionId,
+            'kkiapay_transaction_id' => $transactionId,
         ]);
 
         $bien->update(['statut' => $pending['type_contrat'] === 'vente' ? 'vendu' : 'loue']);

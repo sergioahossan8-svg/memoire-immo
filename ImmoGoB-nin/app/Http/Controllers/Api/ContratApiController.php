@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Bien;
 use App\Models\Contrat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class ContratApiController extends Controller
 {
@@ -53,23 +55,24 @@ class ContratApiController extends Controller
             'lu' => false,
         ]);
 
-        // Stocker en session (même logique que le web)
-        session([
-            'reservation_pending' => [
-                'bien_id'       => $bien->id,
-                'type_contrat'  => $data['type_contrat'],
-                'date_limite'   => $data['date_limite'],
-                'mode_paiement' => $data['mode_paiement'],
-                'montant'       => $bien->prix * 0.10,
-                'type_paiement' => 'acompte',
-            ]
-        ]);
+        // Stocker dans le cache serveur (stateless — pas de session)
+        // TTL 30 min : le client a 30 min pour confirmer le paiement
+        $reservationKey = 'reservation_' . Str::random(24);
+        Cache::put($reservationKey, [
+            'bien_id'       => $bien->id,
+            'type_contrat'  => $data['type_contrat'],
+            'date_limite'   => $data['date_limite'],
+            'mode_paiement' => $data['mode_paiement'],
+            'montant'       => $bien->prix * 0.10,
+            'type_paiement' => 'acompte',
+        ], now()->addMinutes(30));
 
         return response()->json([
-            'message' => 'Réservation initiée. Procédez au paiement.',
-            'bien_id' => $bien->id,
+            'message'         => 'Réservation initiée. Procédez au paiement.',
+            'bien_id'         => $bien->id,
             'montant_acompte' => $bien->prix * 0.10,
-            'bien_titre' => $bien->titre,
+            'bien_titre'      => $bien->titre,
+            'reservation_key' => $reservationKey,  // à conserver côté mobile pour initier le paiement
         ]);
     }
 
