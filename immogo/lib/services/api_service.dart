@@ -12,9 +12,9 @@ class ApiService {
   late final Dio dio = Dio(
     BaseOptions(
       baseUrl: dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8000/api',
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      sendTimeout: const Duration(seconds: 30),
+      connectTimeout: const Duration(seconds: 60),
+      receiveTimeout: const Duration(seconds: 60),
+      sendTimeout: const Duration(seconds: 60),
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
