@@ -56,15 +56,12 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
     setState(() => _isLoading = true);
     try {
       if (_payerComplet) {
-        final result = await PaiementService().payerComplet(
+        final kkiapayData = await PaiementService().payerComplet(
           bienId: widget.bienId,
           typeContrat: _typeContrat,
         );
         if (mounted) {
-          final url = result['payment_url'] as String?;
-          if (url != null) {
-            context.push('/paiement/webview?url=${Uri.encodeComponent(url)}');
-          }
+          context.push('/paiement/kkiapay', extra: kkiapayData);
         }
       } else {
         final reservationResult = await ContratService().reserver(

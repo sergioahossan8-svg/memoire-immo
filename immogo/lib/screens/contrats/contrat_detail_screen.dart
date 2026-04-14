@@ -314,10 +314,15 @@ class ContratDetailScreen extends ConsumerWidget {
         typePaiement: 'solde',
       );
       if (context.mounted) {
-        final url = result['payment_url'] as String?;
-        if (url != null) {
-          context.push(
-              '/paiement/webview?url=${Uri.encodeComponent(url)}&contrat_id=${contrat.id}');
+        final kkiapayData = result;
+        if (kkiapayData['kkiapay_public_key'] != null) {
+          context.push('/paiement/kkiapay', extra: kkiapayData);
+        } else {
+          final url = result['payment_url'] as String?;
+          if (url != null) {
+            context.push(
+                '/paiement/webview?url=${Uri.encodeComponent(url)}&contrat_id=${contrat.id}');
+          }
         }
       }
     } catch (e) {
