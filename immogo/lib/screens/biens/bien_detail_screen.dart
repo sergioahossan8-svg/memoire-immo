@@ -334,42 +334,8 @@ class BienDetailScreen extends ConsumerWidget {
 
   Future<void> _payerComplet(
       BuildContext context, WidgetRef ref, BienModel bien) async {
-    // Demander le type de contrat avant la navigation
-    final typeContrat = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Type de contrat'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.key_outlined, color: AppColors.secondary),
-              title: const Text('Location'),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-              onTap: () => Navigator.pop(context, 'location'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home_work_outlined, color: AppColors.primary),
-              title: const Text('Vente'),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-              onTap: () => Navigator.pop(context, 'vente'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-        ],
-      ),
-    );
-    if (typeContrat == null || !context.mounted) return;
-
-    // Rediriger vers l'écran réservation avec le paramètre type=complet
-    context.push('/reservation/${bien.id}?type=complet&type_contrat=$typeContrat');
+    // Le type de contrat est celui du bien (defini par l'admin, non modifiable)
+    // L'ecran de reservation le recuperera directement depuis bien.transaction
+    context.push('/reservation/${bien.id}?type=complet');
   }
 }

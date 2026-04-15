@@ -28,6 +28,13 @@ class PaiementApiController extends Controller
             'type_contrat' => 'required|in:location,vente',
         ]);
 
+        // Verifier que le type_contrat correspond a la transaction du bien
+        if ($data['type_contrat'] !== $bien->transaction) {
+            return response()->json([
+                'message' => 'Le type de contrat doit correspondre à la transaction du bien (' . $bien->transaction . ').'
+            ], 422);
+        }
+
         return $this->initierKkiapay(
             montant:      $bien->prix,
             description:  'Paiement complet - ' . $bien->titre,

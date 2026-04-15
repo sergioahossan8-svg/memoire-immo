@@ -46,6 +46,13 @@ class ContratApiController extends Controller
             'mode_paiement' => 'required|in:mobile_money,virement,especes,carte',
         ]);
 
+        // Verifier que le type_contrat correspond a la transaction du bien
+        if ($data['type_contrat'] !== $bien->transaction) {
+            return response()->json([
+                'message' => 'Le type de contrat doit correspondre à la transaction du bien (' . $bien->transaction . ').'
+            ], 422);
+        }
+
         // Créer une notification pour la réservation
         \App\Models\NotificationImmogo::create([
             'user_id' => auth()->id(),

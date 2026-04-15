@@ -66,8 +66,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (_, __) => const EstimationScreen()),
       GoRoute(
         path: '/reservation/:bienId',
-        builder: (_, state) => ReservationScreen(
-            bienId: int.parse(state.pathParameters['bienId']!)),
+        builder: (_, state) {
+          final bienId = int.parse(state.pathParameters['bienId']!);
+          final type = state.uri.queryParameters['type'];
+          return ReservationScreen(
+            bienId: bienId,
+            payerComplet: type == 'complet',
+          );
+        },
       ),
       GoRoute(
         path: '/contrats/:id',

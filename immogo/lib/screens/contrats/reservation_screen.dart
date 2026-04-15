@@ -12,8 +12,13 @@ import '../../widgets/common/loading_widget.dart';
 
 class ReservationScreen extends ConsumerStatefulWidget {
   final int bienId;
+  final bool payerComplet; // true = paiement complet, false = reservation (acompte)
 
-  const ReservationScreen({super.key, required this.bienId});
+  const ReservationScreen({
+    super.key,
+    required this.bienId,
+    this.payerComplet = false,
+  });
 
   @override
   ConsumerState<ReservationScreen> createState() =>
@@ -22,11 +27,12 @@ class ReservationScreen extends ConsumerStatefulWidget {
 
 class _ReservationScreenState extends ConsumerState<ReservationScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _typeContrat = 'location';
+  late String _typeContrat; // Defini par le type de transaction du bien
   String _modePaiement = 'mobile_money';
   DateTime? _dateLimite;
   bool _isLoading = false;
-  bool _payerComplet = false;
+
+  bool get _isComplet => widget.payerComplet;
 
   String get _dateLimiteStr => _dateLimite == null
       ? 'Sélectionner une date'
@@ -48,14 +54,15 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
 
   Future<void> _submit(double bienPrix) async {
     if (!_formKey.currentState!.validate()) return;
-    if (_dateLimite == null && !_payerComplet) {
+    if (_dateLimite == null && !_isComplet) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Sélectionnez une date limite de paiement')));
       return;
     }
     setState(() => _isLoading = true);
     try {
-      if (_payerComplet) {
+      if (_isComplet) {
+        // Paiement complet (100%)
         final kkiapayData = await PaiementService().payerComplet(
           bienId: widget.bienId,
           typeContrat: _typeContrat,
@@ -64,6 +71,7 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
           context.push('/paiement/kkiapay', extra: kkiapayData);
         }
       } else {
+        // Reservation (acompte 10%)
         final reservationResult = await ContratService().reserver(
           bienId: widget.bienId,
           typeContrat: _typeContrat,
@@ -113,7 +121,9 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Réservation')),
+      appBar: AppBar(
+        title: Text(_isComplet ? 'Paiement en totalité' : 'Réservation'),
+      ),
       body: SafeArea(
         child: bienAsync.when(
           loading: () => const LoadingWidget(),
@@ -122,6 +132,9 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
           data: (data) {
             final bien = data['bien'];
             final acompte = (bien.prix * 0.10) as double;
+
+            // Recuperer le type de contrat du bien (non modifiable par le client)
+            _typeContrat = bien.transaction;
 
             return GestureDetector(
               onTap: () => FocusScope.of(context).unfocus(),
@@ -170,31 +183,6 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      // Mode (acompte / complet)
-                      Row(children: [
-                        Expanded(
-                          child: _modeOption(
-                            label: 'Réservation\n(Acompte 10%)',
-                            icon: Icons.handshake_outlined,
-                            selected: !_payerComplet,
-                            color: AppColors.primary,
-                            onTap: () =>
-                                setState(() => _payerComplet = false),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _modeOption(
-                            label: 'Paiement\ncomplet',
-                            icon: Icons.payments_outlined,
-                            selected: _payerComplet,
-                            color: AppColors.success,
-                            onTap: () =>
-                                setState(() => _payerComplet = true),
-                          ),
-                        ),
-                      ]),
-                      const SizedBox(height: 16),
                       // Montant à payer
                       Container(
                         width: double.infinity,
@@ -214,7 +202,7 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
                           children: [
                             Flexible(
                               child: Text(
-                                _payerComplet
+                                _isComplet
                                     ? 'Montant total :'
                                     : 'Acompte (10%) :',
                                 style: Theme.of(context)
@@ -224,7 +212,7 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              _payerComplet
+                              _isComplet
                                   ? Formatters.prix(bien.prix as double)
                                   : Formatters.prix(acompte),
                               style: Theme.of(context)
@@ -238,28 +226,54 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      // Type contrat
+                      // Type contrat (NON MODIFIABLE - defini par l'admin)
                       Text('Type de contrat',
                           style:
                               Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        value: _typeContrat,
-                        isExpanded: true,
-                        items: const [
-                          DropdownMenuItem(
-                              value: 'location', child: Text('Location')),
-                          DropdownMenuItem(
-                              value: 'vente', child: Text('Vente')),
-                        ],
-                        onChanged: (v) =>
-                            setState(() => _typeContrat = v!),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.07),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _typeContrat == 'vente'
+                                  ? Icons.home_work_outlined
+                                  : Icons.key_outlined,
+                              color: AppColors.primary,
+                              size: 22,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              Formatters.transaction(_typeContrat),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600),
+                            ),
+                            const Spacer(),
+                            Text(
+                              'Non modifiable',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontStyle: FontStyle.italic),
+                            ),
+                          ],
                         ),
                       ),
-                      if (!_payerComplet) ...[
+                      if (!_isComplet) ...[
                         const SizedBox(height: 14),
                         Text('Mode de paiement',
                             style: Theme.of(context)
@@ -330,10 +344,39 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
                             ),
                           ),
                         ),
+                      ] else ...[
+                        // Message pour le paiement complet
+                        const SizedBox(height: 14),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: AppColors.success.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle_outline,
+                                  color: AppColors.success, size: 22),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Vous allez payer la totalité du bien via KKiapay.',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(color: AppColors.success),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                       const SizedBox(height: 28),
                       CustomButton(
-                        label: _payerComplet
+                        label: _isComplet
                             ? 'Payer en totalité via KKiapay'
                             : 'Payer l\'acompte via KKiapay',
                         icon: Icons.payment,
@@ -361,49 +404,6 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
             );
           },
         ),
-      ),
-    );
-  }
-
-  Widget _modeOption({
-    required String label,
-    required IconData icon,
-    required bool selected,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-        decoration: BoxDecoration(
-          color: selected ? color : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color, width: selected ? 2 : 1.5),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  )
-                ]
-              : null,
-        ),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, color: selected ? Colors.white : color, size: 26),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: selected ? Colors.white : color,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ]),
       ),
     );
   }

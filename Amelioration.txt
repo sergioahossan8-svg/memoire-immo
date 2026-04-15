@@ -1,0 +1,114 @@
+//Amelioration 1
+Je veux que quand on choisi un bien et qu'on veut la totalité ca appelle Kkiapay et que la personne paye le solde total.
+
+
+//Erreure 
+Installing build\app\outputs\flutter-apk\app-debug.apk...           7,0s
+D/FlutterJNI(11050): Beginning load of flutter...
+D/FlutterJNI(11050): flutter (null) was loaded normally!
+I/flutter (11050): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+I/flutter (11050): 🌐 API_BASE_URL: http://10.10.10.166:8000/api
+I/Choreographer(11050): Skipped 575 frames!  The application may be doing too much work on its main thread.
+W/libc    (11050): Access denied finding property "persist.vendor.gpu.fbc"
+I/mali_gralloc(11050): SPRD: get persist.vendor.gpu.fbc 1
+E/mali_gralloc(11050): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc(11050): ERROR: Unrecognized and/or unsupported format 0x38 and usage 0xb00
+E/mali_gralloc(11050): ERROR: Format allocation info not found for format: 3b
+E/mali_gralloc(11050): ERROR: Format allocation info not found for format: 0
+E/mali_gralloc(11050): Invalid base format! req_base_format = 0x0, req_format = 0x3b
+E/mali_gralloc(11050): ERROR: Unrecognized and/or unsupported format 0x3b and usage 0xb00
+E/mali_gralloc(11050): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc(11050): ERROR: Unrecognized and/or unsupported format 0x38 and usage 0xb00
+E/mali_gralloc(11050): ERROR: Format allocation info not found for format: 3b
+E/mali_gralloc(11050): ERROR: Format allocation info not found for format: 0
+E/mali_gralloc(11050): Invalid base format! req_base_format = 0x0, req_format = 0x3b
+E/mali_gralloc(11050): ERROR: Unrecognized and/or unsupported format 0x3b and usage 0xb00
+D/mali_gralloc(11050): register: id=38a0001bd34, handle=0xf12c0500, importpid=-1, gRegisteredHandles=0
+D/mali_gralloc(11050): register: id=38a0001bd35, handle=0xf12c06c0, importpid=-1, gRegisteredHandles=1
+D/mali_gralloc(11050): register: id=38a0001bd36, handle=0xf12c0880, importpid=-1, gRegisteredHandles=2
+D/mali_gralloc(11050): register: id=38a0001bd37, handle=0xf12c0a40, importpid=-1, gRegisteredHandles=3
+D/mali_gralloc(11050): register: id=38a0001bd38, handle=0xf12c0c00, importpid=-1, gRegisteredHandles=4
+Syncing files to device Infinix X6525D...                        2 591ms
+
+Flutter run key commands.
+r Hot reload.
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on Infinix X6525D is available at: http://127.0.0.1:62500/Do9TGSRPGy8=/
+The Flutter DevTools debugger and profiler on Infinix X6525D is available at: http://127.0.0.1:9101?uri=http://127.0.0.1:62500/Do9TGSRPGy8=/
+I/Choreographer(11050): Skipped 119 frames!  The application may be doing too much work on its main thread.
+D/mali_gralloc(11050): register: id=38a0001bd39, handle=0xd0b453a0, importpid=-1, gRegisteredHandles=5
+I/OpenGLRenderer(11050): Davey! duration=1440ms; Flags=1, FrameTimelineVsyncId=69612691, IntendedVsync=205426262846218, Vsync=205427585068427, InputEventId=0,
+ HandleInputStart=205427594679250, AnimationStart=205427594683596, PerformTraversalsStart=205427594686211, DrawStart=205427620050942, FrameDeadline=2054262840
+68440, FrameInterval=205427594035750, FrameStartTime=11111111, SyncQueued=205427632187134, SyncStart=205427632329442, IssueDrawCommandsStart=205427635280673, 
+SwapBuffers=205427702615211, FrameCompleted=205427703903596, DequeueBufferDuration=4455730, QueueBufferDuration=771307, GpuCompleted=205427703903596, SwapBuffersCompleted=205427703539019, DisplayPresentTime=7597416872071463027, CommandSubmissionCompleted=205427702615211,
+D/ProfileInstaller(11050): Installing profile for com.example.immogo
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2        
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2        
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2        
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+D/BLASTBufferQueue(11050): [SurfaceView[com.example.immogo/com.example.immogo.MainActivity]#1](f:1,a:4) Can not acquire next buffer (WTC=false), ret=2
+../../runtime/vm/zone.cc: 96: error: Out of memory.
+version=3.9.2 (stable) (Wed Aug 27 03:49:40 2025 -0700) on "windows_x64"
+pid=5908, thread=10020, isolate_group=main(000002545B7A2520), isolate=(nil)(0000000000000000)
+os=windows, arch=x64, comp=no, sim=no
+isolate_instructions=2545a960000, vm_instructions=7ff7d95b9b00
+fp=99a80fd6f0, sp=99a80fd6a8, pc=7ff7d986ca93
+  pc 0x00007ff7d986ca93 fp 0x00000099a80fd6f0 Dart_DetectNullSafety+0x2aaa23
+-- End of DumpStackTrace
+=== Crash occurred when compiling package:vm_service/src/vm_service.dart_Event_Event._fromJson@348266273 in optimizing JIT mode in TypePropagation pass       
+*** BEGIN CFG
+TypePropagation
+==== dart:_compact_hash___Map&_HashVMBase&MapMixin&_HashBase&_OperatorEqualsAndHashCode&_LinkedHashMapMixin@3099033_[] (RegularFunction)
+B0[graph]:0 {
+      v439 <- Constant(#timestamp)
+      v440 <- Constant(#null)
+      v441 <- Constant(#<optimized out>)
+}
+B173[function entry]:2 {
+      v442 <- Parameter(0 @fp[3])
+      v443 <- Parameter(1 @fp[2])
+      v444 <- Parameter(0 @?) T{_Map}
+}
+    DebugStepCheck:10()
+    DebugStepCheck:14()
+    RecordCoverage()
+    v445 <- InstanceCall:12( _getValueOrData@3099033<0>, v444, v439 IC[1: _Map@3099033 cnt:17541 trgt:'__Map&_HashVMBase&MapMixin&_HashBase&_OperatorEqualsAndHashCode&_LinkedHashMapMixin@3099033._getValueOrData@3099033'] using unchecked entrypoint)
+    v446 <- InstanceCall:16( get:_data@3099033<0>, v444 IC[1: _Map@3099033 cnt:17541 trgt:'_HashVMBase@3099033.get__data@3099033'])
+    Branch if StrictCompare:18(===, v446, v445, with number check) goto (175, 176)
+B175[target]:22
+    goto:28 B177
+B176[target]:24
+    goto:30 B177
+B177[join]:26 pred(B175, B176) {
+      v447 <- phi(v440, v445) alive T{*?}
+}
+    DebugStepCheck:32()
+    DartReturn:34(v447)
