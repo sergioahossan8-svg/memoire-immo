@@ -39,7 +39,7 @@ class _PaiementWebviewScreenState extends State<PaiementWebviewScreen> {
           setState(() => _isLoading = false);
         },
         onNavigationRequest: (request) {
-          // Intercepter les redirections de retour FedaPay
+          // Intercepter les redirections de retour KKiapay
           if (_isReturnUrl(request.url)) {
             _handleReturnUrl(request.url);
             return NavigationDecision.prevent;
