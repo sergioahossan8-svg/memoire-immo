@@ -9,15 +9,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('paiements', function (Blueprint $table) {
-            $table->string('fedapay_transaction_id')->nullable()->after('reference');
-            $table->string('fedapay_token')->nullable()->after('fedapay_transaction_id');
+            // Utilisation de KKiapay (remplace FedaPay)
+            if (!Schema::hasColumn('paiements', 'kkiapay_transaction_id')) {
+                $table->string('kkiapay_transaction_id')->nullable()->after('reference');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('paiements', function (Blueprint $table) {
-            $table->dropColumn(['fedapay_transaction_id', 'fedapay_token']);
+            if (Schema::hasColumn('paiements', 'kkiapay_transaction_id')) {
+                $table->dropColumn('kkiapay_transaction_id');
+            }
         });
     }
 };

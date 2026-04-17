@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminAgence;
 use App\Models\Agence;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -14,8 +15,8 @@ class AgenceController extends Controller
     {
         $agences = Agence::with('adminPrincipal')->withCount('biens')->latest()->paginate(20);
         $stats = [
-            'agences_actives' => Agence::where('statut', 'actif')->count(),
-            'administrateurs' => User::where('role', 'admin_agence')->count(),
+            'agences_actives'  => Agence::where('statut', 'actif')->count(),
+            'administrateurs'  => AdminAgence::count(),
             'annonces_publiees' => \App\Models\Bien::where('is_published', true)->count(),
         ];
         return view('superadmin.agences.index', compact('agences', 'stats'));
@@ -29,13 +30,13 @@ class AgenceController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nom_commercial' => 'required|string|max:200',
-            'secteur' => 'required|in:Résidentiel,Commercial,Industriel,Mixte',
-            'ville' => 'required|string',
+            'nom_commercial'  => 'required|string|max:200',
+            'secteur'         => 'required|in:Résidentiel,Commercial,Industriel,Mixte',
+            'ville'           => 'required|string',
             'adresse_complete' => 'required|string',
-            'email' => 'required|email|unique:agences',
-            'telephone' => 'nullable|string|max:20',
-            'logo' => 'nullable|image|max:2048',
+            'email'           => 'required|email|unique:agences',
+            'telephone'       => 'nullable|string|max:20',
+            'logo'            => 'nullable|image|max:2048',
             // Admin principal
             'admin_nom'       => 'required|string|max:100',
             'admin_prenom'    => 'required|string|max:100',
@@ -46,29 +47,34 @@ class AgenceController extends Controller
             'admin_password'  => 'required|min:8',
         ]);
 
-        // Créer l'agence
+        // 1. Créer l'agence
         $agence = Agence::create([
-            'nom_commercial' => $data['nom_commercial'],
-            'secteur'        => $data['secteur'],
-            'ville'          => $data['ville'],
+            'nom_commercial'  => $data['nom_commercial'],
+            'secteur'         => $data['secteur'],
+            'ville'           => $data['ville'],
             'adresse_complete' => $data['adresse_complete'],
-            'email'          => $data['email'],
-            'telephone'      => $data['telephone'] ?? null,
-            'logo'           => request()->hasFile('logo') ? request()->file('logo')->store('agences', 'public') : null,
-            'statut'         => 'actif',
+            'email'           => $data['email'],
+            'telephone'       => $data['telephone'] ?? null,
+            'logo'            => $request->hasFile('logo') ? $request->file('logo')->store('agences', 'public') : null,
+            'statut'          => 'actif',
         ]);
 
-        // Créer l'admin principal
+        // 2. Créer l'admin principal dans la table mère users (données communes)
         $admin = User::create([
-            'name'        => $data['admin_nom'],
-            'prenom'      => $data['admin_prenom'],
-            'email'       => $data['admin_email'],
-            'telephone'   => $data['admin_telephone'] ?? null,
-            'whatsapp'    => $data['admin_whatsapp'] ?? null,
-            'role'        => 'admin_agence',
-            'agence_id'   => $agence->id,
+            'name'      => $data['admin_nom'],
+            'prenom'    => $data['admin_prenom'],
+            'email'     => $data['admin_email'],
+            'telephone' => $data['admin_telephone'] ?? null,
+            'role'      => 'admin_agence',
+            'password'  => Hash::make($data['admin_password']),
+        ]);
+
+        // 3. Créer dans la table spécialisée admin_agences (données spécifiques)
+        AdminAgence::create([
+            'user_id'       => $admin->id,
+            'agence_id'     => $agence->id,
             'est_principal' => true,
-            'password'    => Hash::make($data['admin_password']),
+            'whatsapp'      => $data['admin_whatsapp'] ?? null,
         ]);
 
         $admin->assignRole('admin_agence');
@@ -81,7 +87,7 @@ class AgenceController extends Controller
 
     public function show(Agence $agence)
     {
-        $agence->load(['administrateurs', 'biens.photos']);
+        $agence->load(['adminAgences.user', 'biens.photos']);
         return view('superadmin.agences.show', compact('agence'));
     }
 
@@ -93,11 +99,11 @@ class AgenceController extends Controller
     public function update(Request $request, Agence $agence)
     {
         $data = $request->validate([
-            'nom_commercial' => 'required|string|max:200',
-            'secteur' => 'required|in:Résidentiel,Commercial,Industriel,Mixte',
-            'ville' => 'required|string',
+            'nom_commercial'  => 'required|string|max:200',
+            'secteur'         => 'required|in:Résidentiel,Commercial,Industriel,Mixte',
+            'ville'           => 'required|string',
             'adresse_complete' => 'required|string',
-            'telephone' => 'nullable|string|max:20',
+            'telephone'       => 'nullable|string|max:20',
         ]);
 
         $agence->update($data);

@@ -10,7 +10,8 @@ class ClientController extends Controller
 {
     public function index()
     {
-        $agenceId = auth()->user()->agence_id;
+        // Récupérer l'agence_id via la table spécialisée admin_agences
+        $agenceId = auth()->user()->adminAgence?->agence_id;
 
         $clients = User::where('role', 'client')
             ->whereHas('contrats.bien', fn($q) => $q->where('agence_id', $agenceId))
@@ -22,7 +23,7 @@ class ClientController extends Controller
 
     public function show(User $user)
     {
-        $agenceId = auth()->user()->agence_id;
+        $agenceId = auth()->user()->adminAgence?->agence_id;
         $contrats = $user->contrats()
             ->whereHas('bien', fn($q) => $q->where('agence_id', $agenceId))
             ->with(['bien.photos', 'paiements'])
@@ -33,7 +34,7 @@ class ClientController extends Controller
 
     public function reservations()
     {
-        $agenceId = auth()->user()->agence_id;
+        $agenceId = auth()->user()->adminAgence?->agence_id;
         $reservations = Contrat::whereHas('bien', fn($q) => $q->where('agence_id', $agenceId))
             ->with(['bien.photos', 'client', 'paiements'])
             ->latest()

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,15 +48,21 @@ class AuthApiController extends Controller
             'password'  => 'required|min:8|confirmed',
         ]);
 
+        // Créer l'utilisateur dans la table mère users (données communes)
         $user = User::create([
             'name'      => $data['name'],
             'prenom'    => $data['prenom'],
             'email'     => $data['email'],
             'telephone' => $data['telephone'] ?? null,
-            'ville'     => $data['ville'],
-            'adresse'   => $data['adresse'] ?? null,
             'role'      => 'client',
             'password'  => Hash::make($data['password']),
+        ]);
+
+        // Créer l'entrée dans la table spécialisée clients (données spécifiques)
+        Client::create([
+            'user_id' => $user->id,
+            'ville'   => $data['ville'],
+            'adresse' => $data['adresse'] ?? null,
         ]);
 
         $user->assignRole('client');
@@ -81,16 +88,18 @@ class AuthApiController extends Controller
 
     private function formatUser(User $user): array
     {
+        $client = $user->client; // données spécifiques dans la table clients
+
         return [
             'id'        => $user->id,
             'name'      => $user->name,
             'prenom'    => $user->prenom,
             'email'     => $user->email,
             'telephone' => $user->telephone,
-            'ville'     => $user->ville,
-            'adresse'   => $user->adresse,
+            'ville'     => $client?->ville,
+            'adresse'   => $client?->adresse,
             'role'      => $user->role,
-            'avatar'    => $user->avatar ? \Storage::url($user->avatar) : null,
+            'avatar'    => $client?->avatar ? \Storage::url($client->avatar) : null,
         ];
     }
 }

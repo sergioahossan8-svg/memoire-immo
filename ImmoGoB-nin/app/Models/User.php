@@ -12,9 +12,13 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles, HasApiTokens;
 
+    /**
+     * Colonnes communes à tous les utilisateurs (table mère users).
+     * Les colonnes spécifiques (adresse, ville, avatar, whatsapp, agence_id, est_principal)
+     * sont dans les tables spécialisées : clients, admin_agences, super_admins.
+     */
     protected $fillable = [
-        'name', 'prenom', 'email', 'telephone', 'whatsapp', 'adresse', 'ville', 'avatar',
-        'role', 'agence_id', 'est_principal', 'password',
+        'name', 'prenom', 'email', 'telephone', 'role', 'password',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -24,14 +28,30 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'est_principal' => 'boolean',
         ];
     }
 
-    public function agence()
+    // ── Relations CTI (Class Table Inheritance) ────────────────────────────
+
+    /** Données spécifiques au client (adresse, ville, avatar) */
+    public function client()
     {
-        return $this->belongsTo(Agence::class);
+        return $this->hasOne(Client::class);
     }
+
+    /** Données spécifiques à l'admin d'agence (agence_id, est_principal, whatsapp) */
+    public function adminAgence()
+    {
+        return $this->hasOne(AdminAgence::class);
+    }
+
+    /** Données spécifiques au super admin (whatsapp) */
+    public function superAdmin()
+    {
+        return $this->hasOne(SuperAdmin::class);
+    }
+
+    // ── Relations métier (conservées sur User pour la compatibilité Sanctum/contrats) ──
 
     public function contrats()
     {
@@ -53,6 +73,8 @@ class User extends Authenticatable
         return $this->hasMany(NotificationImmogo::class);
     }
 
+    // ── Helpers rôle ───────────────────────────────────────────────────────
+
     public function isSuperAdmin(): bool
     {
         return $this->role === 'super_admin';
@@ -69,15 +91,15 @@ class User extends Authenticatable
     }
 
     /**
-     * Retourne le modèle enfant correspondant au rôle
+     * Retourne le modèle enfant correspondant au rôle (table spécialisée).
      */
-    public function asTyped(): static
+    public function asTyped(): ?Model
     {
         return match($this->role) {
-            'client'      => Client::withoutGlobalScopes()->find($this->id),
-            'admin_agence'=> AdminAgence::withoutGlobalScopes()->find($this->id),
-            'super_admin' => SuperAdmin::withoutGlobalScopes()->find($this->id),
-            default       => $this,
+            'client'       => Client::where('user_id', $this->id)->first(),
+            'admin_agence' => AdminAgence::where('user_id', $this->id)->first(),
+            'super_admin'  => SuperAdmin::where('user_id', $this->id)->first(),
+            default        => null,
         };
     }
 }

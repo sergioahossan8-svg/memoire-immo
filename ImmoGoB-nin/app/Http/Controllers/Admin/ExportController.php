@@ -9,7 +9,7 @@ class ExportController extends Controller
 {
     public function biensPdf()
     {
-        $agence = auth()->user()->agence;
+        $agence = auth()->user()->adminAgence?->agence;
 
         $biens = Bien::where('agence_id', $agence->id)
             ->with(['typeBien'])

@@ -57,9 +57,12 @@ class BienController extends Controller
         // Sauvegarder en session pour visiteurs et utilisateurs connectés
         session(['ville_active' => $ville]);
 
-        // Si connecté, mettre à jour le profil aussi
+        // Si connecté, mettre à jour la ville dans la table clients
         if (auth()->check()) {
-            auth()->user()->update(['ville' => $ville]);
+            auth()->user()->client()->updateOrCreate(
+                ['user_id' => auth()->id()],
+                ['ville' => $ville]
+            );
         }
 
         return redirect()->route('home')->with('success', 'Localisation mise à jour.');
@@ -71,8 +74,8 @@ class BienController extends Controller
         if (session('ville_active')) {
             return session('ville_active');
         }
-        if (auth()->check() && auth()->user()->ville) {
-            return auth()->user()->ville;
+        if (auth()->check() && auth()->user()->client?->ville) {
+            return auth()->user()->client->ville;
         }
         return 'Cotonou';
     }

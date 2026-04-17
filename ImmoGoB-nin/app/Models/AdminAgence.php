@@ -2,23 +2,35 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
-class AdminAgence extends User
+/**
+ * Modèle AdminAgence — Class Table Inheritance
+ * Table : admin_agences (user_id FK → users, agence_id FK → agences)
+ * Colonnes spécifiques : whatsapp, est_principal
+ */
+class AdminAgence extends Model
 {
-    protected $table = 'users';
+    protected $table = 'admin_agences';
 
-    protected static function booted(): void
+    protected $fillable = [
+        'user_id', 'agence_id', 'est_principal', 'whatsapp',
+    ];
+
+    protected function casts(): array
     {
-        static::addGlobalScope('role', function (Builder $builder) {
-            $builder->where('role', 'admin_agence');
-        });
-
-        static::creating(function (AdminAgence $model) {
-            $model->role = 'admin_agence';
-        });
+        return [
+            'est_principal' => 'boolean',
+        ];
     }
 
+    // ── Relation vers la table users (table mère) ──────────────────────────
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    // ── Relation vers l'agence ─────────────────────────────────────────────
     public function agence()
     {
         return $this->belongsTo(Agence::class);

@@ -66,7 +66,7 @@
                 <a href="{{ route('admin.administrateurs.index') }}" class="sidebar-link {{ request()->routeIs('admin.administrateurs*') ? 'active' : '' }}">
                     <i class="fas fa-user-cog w-5"></i> Paramètres Système
                 </a>
-                @if(auth()->user()->est_principal)
+                @if(auth()->user()->adminAgence?->est_principal)
                 <a href="{{ route('admin.agence.parametres') }}" class="sidebar-link {{ request()->routeIs('admin.agence.parametres*') ? 'active' : '' }}">
                     <i class="fas fa-building w-5"></i> Mon Agence
                 </a>
@@ -81,11 +81,11 @@
                 <p class="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">Support Dédié</p>
                 <p class="text-xs text-gray-500 mb-3">Une question technique ? Nos experts sont là 24/7.</p>
                 @php
-                    $superAdmin = \App\Models\User::where('role', 'super_admin')->first();
-                    $waNumber   = $superAdmin?->whatsapp
-                        ? preg_replace('/[^0-9]/', '', $superAdmin->whatsapp)
+                    $superAdminUser = \App\Models\User::where('role', 'super_admin')->first();
+                    $waNumber = $superAdminUser?->superAdmin?->whatsapp
+                        ? preg_replace('/[^0-9]/', '', $superAdminUser->superAdmin->whatsapp)
                         : env('SUPERADMIN_WHATSAPP', '22900000000');
-                    $agenceName = auth()->user()->agence?->nom_commercial ?? 'Admin';
+                    $agenceName = auth()->user()->adminAgence?->agence?->nom_commercial ?? 'Admin';
                     $waMsg = urlencode("Bonjour, je suis {$agenceName} et j'ai besoin d'aide sur ImmoGo.");
                 @endphp
                 <a href="https://wa.me/{{ $waNumber }}?text={{ $waMsg }}"

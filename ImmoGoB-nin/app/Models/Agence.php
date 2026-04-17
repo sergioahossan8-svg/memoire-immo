@@ -21,14 +21,22 @@ class Agence extends Model
             && !empty($this->kkiapay_secret);
     }
 
+    public function adminAgences()
+    {
+        return $this->hasMany(\App\Models\AdminAgence::class);
+    }
+
     public function administrateurs()
     {
-        return $this->hasMany(User::class)->where('role', 'admin_agence');
+        // Relation via la table admin_agences (héritage de classe)
+        return $this->hasManyThrough(User::class, \App\Models\AdminAgence::class, 'agence_id', 'id', 'id', 'user_id');
     }
 
     public function adminPrincipal()
     {
-        return $this->hasOne(User::class)->where('est_principal', true);
+        // Admin principal via la table admin_agences
+        return $this->hasOneThrough(User::class, \App\Models\AdminAgence::class, 'agence_id', 'id', 'id', 'user_id')
+            ->where('admin_agences.est_principal', true);
     }
 
     public function biens()

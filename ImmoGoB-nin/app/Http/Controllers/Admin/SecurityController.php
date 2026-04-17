@@ -9,12 +9,12 @@ class SecurityController extends Controller
 {
     public function index()
     {
-        $agenceId = auth()->user()->agence_id;
+        // Récupérer l'agence via la table spécialisée admin_agences
+        $agenceId = auth()->user()->adminAgence?->agence_id;
 
-        // Logs de l'agence : actions des admins de cette agence
-        $adminIds = \App\Models\User::where('agence_id', $agenceId)
-            ->where('role', 'admin_agence')
-            ->pluck('id');
+        // Logs de l'agence : actions des admins de cette agence via admin_agences
+        $adminIds = \App\Models\AdminAgence::where('agence_id', $agenceId)
+            ->pluck('user_id');
 
         $logs = ActivityLog::whereIn('user_id', $adminIds)
             ->with('user')

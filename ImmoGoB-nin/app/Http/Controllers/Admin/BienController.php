@@ -12,7 +12,7 @@ class BienController extends Controller
 {
     public function index()
     {
-        $agence = auth()->user()->agence;
+        $agence = auth()->user()->adminAgence?->agence;
         $biens = Bien::where('agence_id', $agence->id)
             ->with(['photos', 'typeBien'])
             ->latest()->paginate(15);
@@ -42,7 +42,7 @@ class BienController extends Controller
             'photos.*' => 'image|max:5120',
         ]);
 
-        $agence = auth()->user()->agence;
+        $agence = auth()->user()->adminAgence?->agence;
         $data['agence_id'] = $agence->id;
         $data['statut'] = 'disponible';
 
@@ -162,6 +162,6 @@ class BienController extends Controller
 
     private function authorizeAgence(Bien $bien): void
     {
-        abort_if($bien->agence_id !== auth()->user()->agence_id, 403);
+        abort_if($bien->agence_id !== auth()->user()->adminAgence?->agence_id, 403);
     }
 }

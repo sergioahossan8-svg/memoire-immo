@@ -9,16 +9,18 @@ class AgenceParametresController extends Controller
 {
     public function index()
     {
-        abort_if(!auth()->user()->est_principal, 403, 'Accès réservé à l\'administrateur principal.');
-        $agence = auth()->user()->agence;
+        $adminAgence = auth()->user()->adminAgence;
+        abort_if(!$adminAgence || !$adminAgence->est_principal, 403, 'Accès réservé à l\'administrateur principal.');
+        $agence = $adminAgence->agence;
         return view('admin.agence-parametres', compact('agence'));
     }
 
     public function update(Request $request)
     {
-        abort_if(!auth()->user()->est_principal, 403);
+        $adminAgence = auth()->user()->adminAgence;
+        abort_if(!$adminAgence || !$adminAgence->est_principal, 403);
 
-        $agence = auth()->user()->agence;
+        $agence = $adminAgence->agence;
 
         $data = $request->validate([
             'nom_commercial'     => 'required|string|max:200',

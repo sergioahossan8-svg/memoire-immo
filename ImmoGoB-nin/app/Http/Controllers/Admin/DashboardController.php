@@ -11,7 +11,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $agence = auth()->user()->agence;
+        $agence = auth()->user()->adminAgence?->agence;
 
         $stats = [
             'biens_actifs' => Bien::where('agence_id', $agence->id)->where('is_published', true)->count(),

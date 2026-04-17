@@ -2,20 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
-class SuperAdmin extends User
+/**
+ * Modèle SuperAdmin — Class Table Inheritance
+ * Table : super_admins (user_id FK → users)
+ * Colonnes spécifiques : whatsapp
+ */
+class SuperAdmin extends Model
 {
-    protected $table = 'users';
+    protected $table = 'super_admins';
 
-    protected static function booted(): void
+    protected $fillable = [
+        'user_id', 'whatsapp',
+    ];
+
+    // ── Relation vers la table users (table mère) ──────────────────────────
+    public function user()
     {
-        static::addGlobalScope('role', function (Builder $builder) {
-            $builder->where('role', 'super_admin');
-        });
-
-        static::creating(function (SuperAdmin $model) {
-            $model->role = 'super_admin';
-        });
+        return $this->belongsTo(User::class);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -10,7 +11,9 @@ class ProfilApiController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
+        $user   = auth()->user();
+        $client = $user->client; // données spécifiques dans la table clients
+
         return response()->json([
             'user' => [
                 'id'        => $user->id,
@@ -18,9 +21,9 @@ class ProfilApiController extends Controller
                 'prenom'    => $user->prenom,
                 'email'     => $user->email,
                 'telephone' => $user->telephone,
-                'ville'     => $user->ville,
-                'adresse'   => $user->adresse,
-                'avatar'    => $user->avatar ? \Storage::url($user->avatar) : null,
+                'ville'     => $client?->ville,
+                'adresse'   => $client?->adresse,
+                'avatar'    => $client?->avatar ? \Storage::url($client->avatar) : null,
             ]
         ]);
     }
@@ -39,17 +42,33 @@ class ProfilApiController extends Controller
             'password'  => 'nullable|min:8|confirmed',
         ]);
 
-        if ($request->hasFile('avatar')) {
-            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
-        }
+        // Mettre à jour les données communes dans la table users
+        $userUpdate = [
+            'name'      => $data['name'],
+            'prenom'    => $data['prenom'],
+            'telephone' => $data['telephone'] ?? $user->telephone,
+        ];
 
         if (!empty($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
-        } else {
-            unset($data['password']);
+            $userUpdate['password'] = Hash::make($data['password']);
         }
 
-        $user->update($data);
+        $user->update($userUpdate);
+
+        // Mettre à jour les données spécifiques dans la table clients
+        $clientData = [];
+        if (isset($data['ville']))   $clientData['ville']   = $data['ville'];
+        if (isset($data['adresse'])) $clientData['adresse'] = $data['adresse'];
+
+        if ($request->hasFile('avatar')) {
+            $clientData['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        if (!empty($clientData)) {
+            $user->client()->updateOrCreate(['user_id' => $user->id], $clientData);
+        }
+
+        $client = $user->fresh()->client;
 
         return response()->json([
             'message' => 'Profil mis à jour.',
@@ -59,9 +78,9 @@ class ProfilApiController extends Controller
                 'prenom'    => $user->prenom,
                 'email'     => $user->email,
                 'telephone' => $user->telephone,
-                'ville'     => $user->ville,
-                'adresse'   => $user->adresse,
-                'avatar'    => $user->avatar ? \Storage::url($user->avatar) : null,
+                'ville'     => $client?->ville,
+                'adresse'   => $client?->adresse,
+                'avatar'    => $client?->avatar ? \Storage::url($client->avatar) : null,
             ]
         ]);
     }
