@@ -23,6 +23,16 @@ class BienDetailScreen extends ConsumerWidget {
     final detailAsync = ref.watch(bienDetailProvider(id));
     final isAuth = ref.watch(authProvider).status == AuthStatus.authenticated;
 
+    // Charger les favoris si auth et pas encore chargés
+    if (isAuth) {
+      final favorisState = ref.watch(favoriProvider);
+      if (favorisState is AsyncLoading) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(favoriProvider.notifier).load();
+        });
+      }
+    }
+
     return Scaffold(
       body: detailAsync.when(
         loading: () => const LoadingWidget(message: 'Chargement...'),

@@ -1,1 +1,4 @@
 Lorsque le client choisi un bien et qu'il clique reserver 
+
+
+Les image sur le web et le mobile ne s'affiche pas les admin de l'agence et clients ne rentre pas dans leurs tables respectives quand on les ajoutes. De plus sur le web quand on ajoute en favoris ca ne s'

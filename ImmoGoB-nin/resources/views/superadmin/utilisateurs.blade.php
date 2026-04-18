@@ -39,7 +39,7 @@
                             {{ str_replace('_', ' ', ucfirst($user->role)) }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-600">{{ $user->agence?->nom_commercial ?? '-' }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ $user->adminAgence?->agence?->nom_commercial ?? '-' }}</td>
                     <td class="px-6 py-4 text-sm text-gray-400">{{ $user->created_at->format('d/m/Y') }}</td>
                 </tr>
             @endforeach

@@ -9,7 +9,9 @@ class UtilisateurController extends Controller
 {
     public function index()
     {
-        $utilisateurs = User::with('agence')->latest()->paginate(30);
+        $utilisateurs = User::with(['adminAgence.agence', 'superAdmin', 'client'])
+            ->latest()
+            ->paginate(30);
         return view('superadmin.utilisateurs', compact('utilisateurs'));
     }
 }

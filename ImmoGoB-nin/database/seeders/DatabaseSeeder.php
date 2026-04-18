@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\SuperAdmin as SuperAdminModel;
 use App\Models\TypeBien;
 use App\Models\User;
-use App\Models\SuperAdmin as SuperAdminModel;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -19,20 +19,27 @@ class DatabaseSeeder extends Seeder
             Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
         }
 
-        // Créer le SuperAdmin
-        $superAdmin = User::withoutGlobalScopes()->firstOrCreate(
+        // Créer le SuperAdmin dans la table users (données communes uniquement)
+        $superAdmin = User::firstOrCreate(
             ['email' => 'hessoueulogegracien@gmail.com'],
             [
                 'name'      => 'ImmoGo',
                 'prenom'    => 'Super Admin',
                 'email'     => 'hessoueulogegracien@gmail.com',
                 'telephone' => '+22901000000',
-                'whatsapp'  => '+22901000000',
                 'role'      => 'super_admin',
                 'password'  => Hash::make('Euloge55'),
             ]
         );
         $superAdmin->assignRole('super_admin');
+
+        // Créer l'entrée dans la table spécialisée super_admins (CTI)
+        SuperAdminModel::firstOrCreate(
+            ['user_id' => $superAdmin->id],
+            [
+                'whatsapp' => '+22901000000',
+            ]
+        );
 
         // Types de biens
         $types = ['Appartement', 'Maison', 'Villa', 'Parcelle', 'Loft', 'Studio', 'Duplex', 'Bureau'];

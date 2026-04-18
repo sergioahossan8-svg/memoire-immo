@@ -1,7 +1,6 @@
 // lib/screens/splash/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 
@@ -14,7 +13,6 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
-  bool _hasNavigated = false;
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
   late Animation<double> _scaleAnim;
@@ -41,56 +39,38 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _init() async {
-    if (_hasNavigated) return;
+    // Délai minimum pour l'animation
+    await Future.delayed(const Duration(milliseconds: 800));
 
-    // Laisser l'animation démarrer (minimum 600ms pour ne pas flasher)
-    final minDelay = Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
 
-    // Vérifier d'abord le token local (instantané)
+    // Vérifier d'abord le token local (sans réseau)
     final authService = ref.read(authServiceProvider);
     final hasToken = await authService.hasLocalToken();
 
+    if (!mounted) return;
+
     if (!hasToken) {
-      // Pas de token → login direct sans appel réseau
-      await minDelay;
-      _navigate('/login');
+      // Pas de token → mettre l'état à unauthenticated, GoRouter redirige vers /login
+      ref.read(authProvider.notifier).setUnauthenticated();
       return;
     }
 
-    // Token présent → valider côté serveur avec timeout max 25s
-    bool timedOut = false;
+    // Token présent → valider côté serveur avec timeout
     try {
-      await Future.wait([
-        minDelay,
-        ref.read(authProvider.notifier).checkAuth().timeout(
-          const Duration(seconds: 25),
-          onTimeout: () {
-            timedOut = true;
-            // Timeout réseau → mode optimiste : on fait confiance au token local
-          },
-        ),
-      ]);
+      await ref.read(authProvider.notifier).checkAuth().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          // Timeout réseau → mode optimiste, on fait confiance au token local
+          if (mounted) ref.read(authProvider.notifier).setAuthenticated();
+        },
+      );
     } catch (_) {
-      timedOut = true;
+      if (mounted) {
+        ref.read(authProvider.notifier).setUnauthenticated();
+      }
     }
-
-    if (!mounted || _hasNavigated) return;
-
-    if (timedOut) {
-      // Pas pu joindre le serveur mais token local présent → on laisse entrer
-      // L'app se déconnectera si le serveur répond 401 plus tard
-      _navigate('/');
-      return;
-    }
-
-    final status = ref.read(authProvider).status;
-    _navigate(status == AuthStatus.authenticated ? '/' : '/login');
-  }
-
-  void _navigate(String path) {
-    if (_hasNavigated || !mounted) return;
-    _hasNavigated = true;
-    context.go(path);
+    // GoRouter réagit automatiquement au changement d'état de authProvider
   }
 
   @override

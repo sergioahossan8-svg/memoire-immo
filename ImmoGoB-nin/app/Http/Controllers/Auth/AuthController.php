@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,15 +50,21 @@ class AuthController extends Controller
             'terms'     => 'accepted',
         ]);
 
+        // Créer l'utilisateur dans la table mère (données communes uniquement)
         $user = User::create([
             'name'      => $data['name'],
             'prenom'    => $data['prenom'],
             'email'     => $data['email'],
             'telephone' => $data['telephone'] ?? null,
-            'ville'     => $data['ville'],
-            'adresse'   => $data['adresse'] ?? null,
             'role'      => 'client',
             'password'  => Hash::make($data['password']),
+        ]);
+
+        // Créer l'entrée dans la table spécialisée clients (données spécifiques)
+        Client::create([
+            'user_id' => $user->id,
+            'ville'   => $data['ville'],
+            'adresse' => $data['adresse'] ?? null,
         ]);
 
         $user->assignRole('client');

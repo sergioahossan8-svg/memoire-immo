@@ -34,9 +34,9 @@ class Agence extends Model
 
     public function adminPrincipal()
     {
-        // Admin principal via la table admin_agences
-        return $this->hasOneThrough(User::class, \App\Models\AdminAgence::class, 'agence_id', 'id', 'id', 'user_id')
-            ->where('admin_agences.est_principal', true);
+        // Retourne l'enregistrement AdminAgence principal (qui contient whatsapp)
+        return $this->hasOne(\App\Models\AdminAgence::class)
+            ->where('est_principal', true);
     }
 
     public function biens()

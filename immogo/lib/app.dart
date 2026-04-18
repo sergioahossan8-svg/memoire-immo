@@ -28,21 +28,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       final onAuthPages = loc == '/login' || loc == '/register';
       final onSplash = loc == '/splash';
 
-      // Si en chargement, rester sur splash
-      if (isLoading && !onSplash) {
-        return '/splash';
+      // Pendant le chargement initial, rester sur splash uniquement
+      if (isLoading) {
+        return onSplash ? null : '/splash';
       }
-      
+
       // Si authentifié et sur splash/login/register, aller à l'accueil
       if (isAuth && (onSplash || onAuthPages)) {
         return '/';
       }
-      
+
       // Si non authentifié et pas sur une page publique, aller au login
       if (!isAuth && !onAuthPages && !onSplash) {
         return '/login';
       }
-      
+
+      // Si non authentifié et sur splash → aller au login
+      if (!isAuth && onSplash) {
+        return '/login';
+      }
+
       return null;
     },
     routes: [

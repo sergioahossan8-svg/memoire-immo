@@ -107,6 +107,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void updateUser(UserModel user) {
     state = state.copyWith(status: AuthStatus.authenticated, user: user);
   }
+
+  void setUnauthenticated() {
+    state = const AuthState(status: AuthStatus.unauthenticated);
+  }
+
+  void setAuthenticated() {
+    state = AuthState(status: AuthStatus.authenticated, user: state.user);
+  }
 }
 
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
