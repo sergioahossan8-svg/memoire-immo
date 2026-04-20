@@ -12,9 +12,28 @@ import 'screens/biens/bien_detail_screen.dart';
 import 'screens/biens/estimation_screen.dart';
 import 'screens/contrats/reservation_screen.dart';
 import 'screens/contrats/contrat_detail_screen.dart';
+import 'screens/contrats/historique_screen.dart';
 import 'screens/paiement/paiement_webview_screen.dart';
 import 'screens/paiement/paiement_confirmation_screen.dart';
 import 'screens/paiement/kkiapay_screen.dart';
+
+/// Pages accessibles sans authentification
+const _publicRoutes = <String>{
+  '/',
+  '/login',
+  '/register',
+  '/splash',
+  '/estimation',
+};
+
+bool _isPublicRoute(String loc) {
+  if (_publicRoutes.contains(loc)) return true;
+  // /biens/:id est public (détail d'un bien)
+  if (loc.startsWith('/biens/')) return true;
+  // /paiement/confirmation est accessible après un paiement (redirection KKiapay)
+  if (loc.startsWith('/paiement/confirmation')) return true;
+  return false;
+}
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -33,18 +52,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         return onSplash ? null : '/splash';
       }
 
-      // Si authentifié et sur splash/login/register, aller à l'accueil
+      // Si authentifié et sur splash/login/register → accueil
       if (isAuth && (onSplash || onAuthPages)) {
         return '/';
       }
 
-      // Si non authentifié et pas sur une page publique, aller au login
-      if (!isAuth && !onAuthPages && !onSplash) {
+      // Si non authentifié et sur splash → login
+      if (!isAuth && onSplash) {
         return '/login';
       }
 
-      // Si non authentifié et sur splash → aller au login
-      if (!isAuth && onSplash) {
+      // Si non authentifié et sur une page protégée → login
+      if (!isAuth && !_isPublicRoute(loc)) {
         return '/login';
       }
 
@@ -69,6 +88,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: '/estimation',
           builder: (_, __) => const EstimationScreen()),
+      // ── Pages authentifiées ──────────────────────────────────────────────
       GoRoute(
         path: '/reservation/:bienId',
         builder: (_, state) {
@@ -79,6 +99,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             payerComplet: type == 'complet',
           );
         },
+      ),
+      GoRoute(
+        path: '/historique',
+        builder: (_, __) => const HistoriqueScreen(),
       ),
       GoRoute(
         path: '/contrats/:id',

@@ -174,7 +174,7 @@
                 <div class="p-4 hover:bg-gray-50 transition flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                         @if($agence->logo)
-                            <img src="{{ Storage::url($agence->logo) }}" class="w-full h-full object-cover">
+                            <img src="{{ str_starts_with($agence->logo, 'http') ? $agence->logo : asset('storage/' . $agence->logo) }}" class="w-full h-full object-cover">
                         @else
                             <i class="fas fa-building text-gray-400 text-sm"></i>
                         @endif

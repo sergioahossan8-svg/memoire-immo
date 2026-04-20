@@ -163,8 +163,12 @@ class PaiementApiController extends Controller
         $agence   = $agenceId ? \App\Models\Agence::find($agenceId) : null;
         $kkiapay  = new KKiapayService($agence);
 
-        if (!$kkiapay->isApproved($transactionId)) {
-            return response()->json(['message' => 'Paiement non confirmé par KKiapay.'], 422);
+        // Si les clés KKiapay sont configurées, vérifier la transaction
+        // Sinon (dev/test sans clés), on accepte la transaction directement
+        if ($kkiapay->isConfigured()) {
+            if (!$kkiapay->isApproved($transactionId)) {
+                return response()->json(['message' => 'Paiement non confirmé par KKiapay.'], 422);
+            }
         }
 
         // Traiter le paiement

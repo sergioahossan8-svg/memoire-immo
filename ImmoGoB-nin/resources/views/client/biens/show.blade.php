@@ -15,7 +15,7 @@
             @if($photos->count() > 0)
                 {{-- Photo principale avec zoom --}}
                 <div class="relative rounded-2xl overflow-hidden bg-gray-100 mb-2" style="height: 480px;">
-                    <img src="{{ Storage::url($photos->first()->chemin) }}"
+                    <img src="{{ str_starts_with($photos->first()->chemin, 'http') ? $photos->first()->chemin : asset('storage/' . $photos->first()->chemin) }}"
                         alt="{{ $bien->titre }}"
                         id="mainPhoto"
                         class="w-full h-full object-contain transition-transform duration-300"
@@ -68,7 +68,7 @@
                             <button onclick="setPhoto({{ $i }})"
                                 id="thumb-{{ $i }}"
                                 class="flex-shrink-0 w-20 h-16 rounded-xl overflow-hidden border-2 transition {{ $i === 0 ? 'border-cyan-400' : 'border-transparent hover:border-gray-300' }}">
-                                <img src="{{ Storage::url($photo->chemin) }}" class="w-full h-full object-cover">
+                                <img src="{{ str_starts_with($photo->chemin, 'http') ? $photo->chemin : asset('storage/' . $photo->chemin) }}" class="w-full h-full object-cover">
                             </button>
                         @endforeach
                     </div>
@@ -142,7 +142,7 @@
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                             @if($bien->agence->logo)
-                                <img src="{{ Storage::url($bien->agence->logo) }}" class="w-full h-full object-cover">
+                                <img src="{{ str_starts_with($bien->agence->logo, 'http') ? $bien->agence->logo : asset('storage/' . $bien->agence->logo) }}" class="w-full h-full object-cover">
                             @else
                                 <i class="fas fa-building text-gray-400 text-xl"></i>
                             @endif
@@ -240,7 +240,7 @@
 @push('scripts')
 <script>
     // Tableau des URLs complètes des photos
-    const photos = @json($photos->map(fn($p) => Storage::url($p->chemin))->values());
+    const photos = @json($photos->map(fn($p) => str_starts_with($p->chemin, 'http') ? $p->chemin : asset('storage/' . $p->chemin))->values());
     let currentIndex = 0;
     let isZoomed = false;
 

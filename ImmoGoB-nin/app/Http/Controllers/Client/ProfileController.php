@@ -28,17 +28,31 @@ class ProfileController extends Controller
             'password'  => 'nullable|min:8|confirmed',
         ]);
 
-        if ($request->hasFile('avatar')) {
-            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
-        }
+        // Données communes → table users
+        $userUpdate = [
+            'name'      => $data['name'],
+            'prenom'    => $data['prenom'],
+            'telephone' => $data['telephone'] ?? $user->telephone,
+        ];
 
         if (!empty($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
-        } else {
-            unset($data['password']);
+            $userUpdate['password'] = Hash::make($data['password']);
         }
 
-        $user->update($data);
+        $user->update($userUpdate);
+
+        // Données spécifiques → table clients (avatar, ville, adresse)
+        $clientData = [];
+        if (isset($data['ville']))   $clientData['ville']   = $data['ville'];
+        if (isset($data['adresse'])) $clientData['adresse'] = $data['adresse'];
+
+        if ($request->hasFile('avatar')) {
+            $clientData['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        if (!empty($clientData)) {
+            $user->client()->updateOrCreate(['user_id' => $user->id], $clientData);
+        }
 
         // Mettre à jour la session de localisation si la ville a changé
         if (!empty($data['ville'])) {

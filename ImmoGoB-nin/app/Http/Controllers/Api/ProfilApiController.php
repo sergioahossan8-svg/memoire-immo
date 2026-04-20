@@ -23,7 +23,7 @@ class ProfilApiController extends Controller
                 'telephone' => $user->telephone,
                 'ville'     => $client?->ville,
                 'adresse'   => $client?->adresse,
-                'avatar'    => $client?->avatar ? \Storage::url($client->avatar) : null,
+                'avatar'    => $client?->avatar ? storage_url($client->avatar) : null,
             ]
         ]);
     }
@@ -80,7 +80,7 @@ class ProfilApiController extends Controller
                 'telephone' => $user->telephone,
                 'ville'     => $client?->ville,
                 'adresse'   => $client?->adresse,
-                'avatar'    => $client?->avatar ? \Storage::url($client->avatar) : null,
+                'avatar'    => $client?->avatar ? storage_url($client->avatar) : null,
             ]
         ]);
     }

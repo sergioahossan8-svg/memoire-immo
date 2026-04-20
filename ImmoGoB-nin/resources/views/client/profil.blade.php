@@ -13,8 +13,8 @@
             {{-- Avatar --}}
             <div class="flex items-center gap-4 mb-6">
                 <div class="w-16 h-16 rounded-full bg-cyan-400 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
-                    @if($user->avatar)
-                        <img src="{{ Storage::url($user->avatar) }}" class="w-full h-full object-cover">
+                    @if($user->client?->avatar)
+                        <img src="{{ asset('storage/' . $user->client->avatar) }}" class="w-full h-full object-cover">
                     @else
                         {{ strtoupper(substr($user->name, 0, 1)) }}
                     @endif

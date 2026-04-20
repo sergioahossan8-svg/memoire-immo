@@ -74,12 +74,12 @@ class PaiementConfirmationScreen extends StatelessWidget {
                   label: success
                       ? 'Voir mes contrats'
                       : 'Retour à l\'accueil',
-                  onPressed: () => context.go('/'),
+                  onPressed: () => context.go(success ? '/historique' : '/'),
                 ),
                 if (success) ...[
                   const SizedBox(height: 12),
                   CustomButton(
-                    label: 'Voir mes contrats',
+                    label: 'Retour à l\'accueil',
                     outlined: true,
                     onPressed: () => context.go('/'),
                   ),

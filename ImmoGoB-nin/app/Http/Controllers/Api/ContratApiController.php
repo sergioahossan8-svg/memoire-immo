@@ -105,7 +105,11 @@ class ContratApiController extends Controller
                 'ville'       => $bien->ville,
                 'transaction' => $bien->transaction,
                 'prix'        => (float) $bien->prix,
-                'photo'       => $photo ? \Storage::url($photo->chemin) : null,
+                'photo'       => $photo
+                    ? (str_starts_with($photo->chemin, 'http://') || str_starts_with($photo->chemin, 'https://')
+                        ? $photo->chemin
+                        : storage_url($photo->chemin))
+                    : null,
                 'agence'      => $bien->agence?->nom,
             ] : null,
         ];

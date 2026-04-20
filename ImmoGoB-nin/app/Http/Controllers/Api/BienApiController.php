@@ -101,7 +101,7 @@ class BienApiController extends Controller
             if (str_starts_with($photo->chemin, 'http://') || str_starts_with($photo->chemin, 'https://')) {
                 $photoUrl = $photo->chemin; // URL externe
             } else {
-                $photoUrl = url(\Storage::url($photo->chemin)); // URL absolue pour le mobile
+                $photoUrl = storage_url($photo->chemin); // URL absolue adaptée
             }
         }
 
@@ -131,7 +131,7 @@ class BienApiController extends Controller
                 'id'            => $p->id,
                 'url'           => str_starts_with($p->chemin, 'http://') || str_starts_with($p->chemin, 'https://')
                     ? $p->chemin
-                    : url(\Storage::url($p->chemin)), // URL absolue
+                    : storage_url($p->chemin), // URL absolue
                 'is_principale' => $p->is_principale,
             ]),
             'agence_detail' => $bien->agence ? [
@@ -139,7 +139,7 @@ class BienApiController extends Controller
                 'nom'    => $bien->agence->nom_commercial,
                 'ville'  => $bien->agence->ville,
                 'secteur'=> $bien->agence->secteur,
-                'logo'   => $bien->agence->logo ? url(\Storage::url($bien->agence->logo)) : null,
+                'logo'   => $bien->agence->logo ? storage_url($bien->agence->logo) : null,
             ] : null,
         ]);
     }

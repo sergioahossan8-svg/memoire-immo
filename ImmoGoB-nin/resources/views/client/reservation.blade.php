@@ -13,7 +13,7 @@
         <div class="bg-gray-50 rounded-xl p-4 mb-6 flex gap-4">
             <div class="w-20 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-200">
                 @if($photo)
-                    <img src="{{ Storage::url($photo->chemin) }}" class="w-full h-full object-cover">
+                    <img src="{{ str_starts_with($photo->chemin, 'http') ? $photo->chemin : asset('storage/' . $photo->chemin) }}" class="w-full h-full object-cover">
                 @else
                     <div class="w-full h-full flex items-center justify-center">
                         <i class="fas fa-home text-gray-300"></i>

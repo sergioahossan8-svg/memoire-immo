@@ -24,7 +24,7 @@
                 <div class="flex items-center gap-4">
                     <div id="logoPreview" class="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-gray-200">
                         @if($agence->logo)
-                            <img src="{{ Storage::url($agence->logo) }}" class="w-full h-full object-cover">
+                            <img src="{{ str_starts_with($agence->logo, 'http') ? $agence->logo : asset('storage/' . $agence->logo) }}" class="w-full h-full object-cover">
                         @else
                             <i class="fas fa-building text-gray-300 text-3xl"></i>
                         @endif

@@ -68,17 +68,32 @@ class AdministrateurController extends Controller
 
     public function edit(User $administrateur)
     {
-        $adminAgence        = auth()->user()->adminAgence;
-        $cibleAdminAgence   = $administrateur->adminAgence;
-        abort_if($cibleAdminAgence?->agence_id !== $adminAgence?->agence_id, 403);
+        $currentAdmin     = auth()->user()->adminAgence;
+        $cibleAdminAgence = $administrateur->adminAgence;
+
+        // Vérifier même agence
+        abort_if($cibleAdminAgence?->agence_id !== $currentAdmin?->agence_id, 403);
+
+        // Un associé ne peut modifier que son propre compte
+        if (!$currentAdmin?->est_principal) {
+            abort_if($administrateur->id !== auth()->id(), 403, 'Un administrateur associé ne peut modifier que son propre profil.');
+        }
+
         return view('admin.administrateurs.edit', compact('administrateur', 'cibleAdminAgence'));
     }
 
     public function update(Request $request, User $administrateur)
     {
-        $adminAgence      = auth()->user()->adminAgence;
+        $currentAdmin     = auth()->user()->adminAgence;
         $cibleAdminAgence = $administrateur->adminAgence;
-        abort_if($cibleAdminAgence?->agence_id !== $adminAgence?->agence_id, 403);
+
+        // Vérifier même agence
+        abort_if($cibleAdminAgence?->agence_id !== $currentAdmin?->agence_id, 403);
+
+        // Un associé ne peut modifier que son propre compte
+        if (!$currentAdmin?->est_principal) {
+            abort_if($administrateur->id !== auth()->id(), 403, 'Un administrateur associé ne peut modifier que son propre profil.');
+        }
 
         $data = $request->validate([
             'name'      => 'required|string|max:100',

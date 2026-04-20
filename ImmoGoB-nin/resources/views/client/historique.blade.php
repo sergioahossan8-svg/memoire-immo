@@ -11,7 +11,7 @@
         <div class="card p-5 mb-4 flex gap-4">
             <div class="w-24 h-20 rounded-xl overflow-hidden flex-shrink-0">
                 @if($photo)
-                    <img src="{{ Storage::url($photo->chemin) }}" class="w-full h-full object-cover">
+                    <img src="{{ str_starts_with($photo->chemin, 'http') ? $photo->chemin : asset('storage/' . $photo->chemin) }}" class="w-full h-full object-cover">
                 @else
                     <div class="w-full h-full bg-gray-200 flex items-center justify-center">
                         <i class="fas fa-home text-gray-300 text-2xl"></i>

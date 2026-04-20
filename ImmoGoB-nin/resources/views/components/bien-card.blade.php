@@ -7,7 +7,7 @@
     {{-- Image --}}
     <div class="relative h-48 overflow-hidden">
         @if($photo)
-            <img src="{{ Storage::url($photo->chemin) }}" alt="{{ $bien->titre }}"
+            <img src="{{ str_starts_with($photo->chemin, 'http') ? $photo->chemin : asset('storage/' . $photo->chemin) }}" alt="{{ $bien->titre }}"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
         @else
             <div class="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -63,7 +63,7 @@
             @if($bien->agence)
                 <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 ml-2 overflow-hidden">
                     @if($bien->agence->logo)
-                        <img src="{{ Storage::url($bien->agence->logo) }}" class="w-full h-full object-cover">
+                        <img src="{{ str_starts_with($bien->agence->logo, 'http') ? $bien->agence->logo : asset('storage/' . $bien->agence->logo) }}" class="w-full h-full object-cover">
                     @else
                         <i class="fas fa-building text-gray-400 text-xs"></i>
                     @endif

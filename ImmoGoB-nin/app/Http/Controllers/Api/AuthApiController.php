@@ -99,7 +99,7 @@ class AuthApiController extends Controller
             'ville'     => $client?->ville,
             'adresse'   => $client?->adresse,
             'role'      => $user->role,
-            'avatar'    => $client?->avatar ? \Storage::url($client->avatar) : null,
+            'avatar'    => $client?->avatar ? storage_url($client->avatar) : null,
         ];
     }
 }

@@ -50,8 +50,8 @@
                         <div class="relative group">
                             <button class="flex items-center gap-2">
                                 <div class="w-8 h-8 rounded-full bg-cyan-400 flex items-center justify-center text-white text-sm font-semibold overflow-hidden">
-                                    @if(auth()->user()->avatar)
-                                        <img src="{{ Storage::url(auth()->user()->avatar) }}" class="w-full h-full object-cover">
+                                    @if(auth()->user()->client?->avatar)
+                                        <img src="{{ asset('storage/' . auth()->user()->client->avatar) }}" class="w-full h-full object-cover">
                                     @else
                                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                     @endif

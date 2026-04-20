@@ -80,7 +80,7 @@
                     <label class="form-label">Photos actuelles</label>
                     <div class="flex gap-2 flex-wrap">
                         @foreach($bien->photos as $photo)
-                            <img src="{{ Storage::url($photo->chemin) }}" class="w-20 h-16 object-cover rounded-xl">
+                            <img src="{{ str_starts_with($photo->chemin, 'http') ? $photo->chemin : asset('storage/' . $photo->chemin) }}" class="w-20 h-16 object-cover rounded-xl">
                         @endforeach
                     </div>
                 </div>

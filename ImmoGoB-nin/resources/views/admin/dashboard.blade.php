@@ -76,7 +76,7 @@
                 @php $photo = $bien->photos->first(); @endphp
                 <div class="w-12 h-10 rounded-lg overflow-hidden flex-shrink-0">
                     @if($photo)
-                        <img src="{{ Storage::url($photo->chemin) }}" class="w-full h-full object-cover">
+                        <img src="{{ str_starts_with($photo->chemin, 'http') ? $photo->chemin : asset('storage/' . $photo->chemin) }}" class="w-full h-full object-cover">
                     @else
                         <div class="w-full h-full bg-gray-100 flex items-center justify-center">
                             <i class="fas fa-home text-gray-300 text-xs"></i>
