@@ -29,36 +29,20 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
   final _formKey = GlobalKey<FormState>();
   late String _typeContrat; // Defini par le type de transaction du bien
   String _modePaiement = 'mobile_money';
-  DateTime? _dateLimite;
   bool _isLoading = false;
 
   bool get _isComplet => widget.payerComplet;
 
-  String get _dateLimiteStr => _dateLimite == null
-      ? 'Sélectionner une date'
-      : '${_dateLimite!.day.toString().padLeft(2, '0')}/${_dateLimite!.month.toString().padLeft(2, '0')}/${_dateLimite!.year}';
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 30)),
-      firstDate: DateTime.now().add(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null) setState(() => _dateLimite = picked);
-  }
+  // Date limite = maintenant + 15 jours (définie côté client et envoyée au backend)
+  DateTime get _dateLimiteFixe => DateTime.now().add(const Duration(days: 15));
 
   String _formatDateForApi(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}:${date.second.toString().padLeft(2, '0')}';
   }
 
   Future<void> _submit(double bienPrix) async {
     if (!_formKey.currentState!.validate()) return;
-    if (_dateLimite == null && !_isComplet) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Sélectionnez une date limite de paiement')));
-      return;
-    }
     setState(() => _isLoading = true);
     try {
       if (_isComplet) {
@@ -71,11 +55,11 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
           context.push('/paiement/kkiapay', extra: kkiapayData);
         }
       } else {
-        // Reservation (acompte 10%)
+        // Reservation (acompte 10%) — date limite = now + 15 jours
         final reservationResult = await ContratService().reserver(
           bienId: widget.bienId,
           typeContrat: _typeContrat,
-          dateLimite: _formatDateForApi(_dateLimite!),
+          dateLimite: _formatDateForApi(_dateLimiteFixe),
           modePaiement: _modePaiement,
         );
         final reservationKey =
@@ -304,44 +288,48 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
                           ),
                         ),
                         const SizedBox(height: 14),
-                        Text('Date limite de paiement du solde',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium),
-                        const SizedBox(height: 8),
-                        GestureDetector(
-                          onTap: _pickDate,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: AppColors.divider),
-                            ),
-                            child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    _dateLimiteStr,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(
-                                            color: _dateLimite == null
-                                                ? AppColors.textSecondary
-                                                : AppColors.textPrimary),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                        // Message délai 15 jours
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.premium.withValues(alpha: 0.07),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: AppColors.premium.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.info_outline,
+                                  size: 20, color: AppColors.premium),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Délai de paiement : 15 jours',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                              color: AppColors.premium,
+                                              fontWeight: FontWeight.w700),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Vous avez 15 jours pour solder votre réservation. Passé ce délai, votre réservation sera annulée, le bien redeviendra disponible et votre argent vous sera restitué.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                              color: AppColors.premium,
+                                              height: 1.5),
+                                    ),
+                                  ],
                                 ),
-                                const Icon(Icons.calendar_today,
-                                    size: 20, color: AppColors.primary),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ] else ...[

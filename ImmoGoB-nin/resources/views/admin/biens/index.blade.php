@@ -59,33 +59,68 @@
                     </td>
                     <td class="px-6 py-4 text-sm font-semibold text-gray-800">{{ $bien->prix_formate }}</td>
 
-                    {{-- Statut avec gestion des règles --}}
+                    {{-- Statut avec gestion des règles métier --}}
                     <td class="px-6 py-4">
                         @if($bien->statut === 'vendu')
-                            {{-- Vendu = définitif, pas de modification --}}
+                            {{-- Vendu = définitif, aucune modification possible --}}
                             <div class="flex items-center gap-2">
                                 <span class="badge-vendu">Vendu</span>
                                 <span class="text-xs text-gray-400 italic">Définitif</span>
                             </div>
 
-                        @elseif(in_array($bien->statut, ['loue', 'reserve']))
-                            {{-- Loué ou réservé = peut remettre en disponible --}}
-                            <div class="flex items-center gap-2">
-                                <span class="badge-{{ $bien->statut }}">{{ ucfirst($bien->statut) }}</span>
-                                <form method="POST" action="{{ route('admin.biens.statut', $bien) }}">
+                        @elseif($bien->statut === 'reserve')
+                            {{-- Réservé : l'admin peut → Libérer, Vendu, Loué --}}
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="badge-reserve">Réservé</span>
+                                {{-- Libérer --}}
+                                <form method="POST" action="{{ route('admin.biens.statut', $bien) }}" class="inline">
                                     @csrf @method('PATCH')
-                                    <input type="hidden" name="statut" value="disponible">
+                                    <input type="hidden" name="statut" value="libere">
                                     <button type="submit"
-                                        onclick="return confirm('Remettre ce bien en disponible ? Les contrats en cours seront annulés.')"
-                                        class="text-xs bg-green-50 hover:bg-green-100 text-green-600 font-medium px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-                                        <i class="fas fa-redo text-xs"></i>
-                                        Libérer
+                                        onclick="return confirm('Libérer ce bien ? Le contrat en cours sera annulé.')"
+                                        class="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-medium px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                                        <i class="fas fa-unlock text-xs"></i> Libérer
+                                    </button>
+                                </form>
+                                {{-- Marquer vendu --}}
+                                <form method="POST" action="{{ route('admin.biens.statut', $bien) }}" class="inline">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="statut" value="vendu">
+                                    <button type="submit"
+                                        onclick="return confirm('Marquer ce bien comme VENDU ? Cette action est irréversible.')"
+                                        class="text-xs bg-red-50 hover:bg-red-100 text-red-600 font-medium px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                                        <i class="fas fa-gavel text-xs"></i> Vendu
+                                    </button>
+                                </form>
+                                {{-- Marquer loué --}}
+                                <form method="POST" action="{{ route('admin.biens.statut', $bien) }}" class="inline">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="statut" value="loue">
+                                    <button type="submit"
+                                        onclick="return confirm('Marquer ce bien comme Loué ?')"
+                                        class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                                        <i class="fas fa-key text-xs"></i> Loué
+                                    </button>
+                                </form>
+                            </div>
+
+                        @elseif($bien->statut === 'loue')
+                            {{-- Loué : l'admin peut → Libérer (remettre en disponible) --}}
+                            <div class="flex items-center gap-2">
+                                <span class="badge-loue">Loué</span>
+                                <form method="POST" action="{{ route('admin.biens.statut', $bien) }}" class="inline">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="statut" value="libere">
+                                    <button type="submit"
+                                        onclick="return confirm('Libérer ce bien loué ? Il redeviendra disponible.')"
+                                        class="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-medium px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                                        <i class="fas fa-unlock text-xs"></i> Libérer
                                     </button>
                                 </form>
                             </div>
 
                         @else
-                            {{-- Disponible ou indisponible = sélecteur complet --}}
+                            {{-- Disponible ou indisponible = sélecteur simple --}}
                             <form method="POST" action="{{ route('admin.biens.statut', $bien) }}" class="flex items-center gap-2">
                                 @csrf @method('PATCH')
                                 <select name="statut" onchange="this.form.submit()"

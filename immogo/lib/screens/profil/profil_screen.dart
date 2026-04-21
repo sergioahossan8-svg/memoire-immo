@@ -191,9 +191,18 @@ class _ProfilScreenState extends ConsumerState<ProfilScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Colors.white,              // couleur du texte sélectionné
+          unselectedLabelColor: Colors.grey,
           tabs: const [
-            Tab(icon: Icon(Icons.person_outline), text: 'Informations'),
-            Tab(icon: Icon(Icons.lock_outline), text: 'Mot de passe'),
+            Tab(
+              icon: Icon(Icons.person_outline, color: Colors.white),
+              text: 'Informations',
+            ),
+
+            Tab(
+              icon: Icon(Icons.lock_outline, color: Colors.white),
+              text: 'Mot de passe',
+            ),
           ],
         ),
       ),

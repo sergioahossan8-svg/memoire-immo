@@ -42,7 +42,7 @@ class ContratApiController extends Controller
 
         $data = $request->validate([
             'type_contrat'  => 'required|in:location,vente',
-            'date_limite'   => 'required|date|after:today',
+            'date_limite'   => 'required|date|after:now',
             'mode_paiement' => 'required|in:mobile_money,virement,especes,carte',
         ]);
 

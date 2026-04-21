@@ -29,9 +29,11 @@ class _BiensListScreenState extends ConsumerState<BiensListScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(bienListProvider.notifier).refresh();
-      final isAuth =
-          ref.read(authProvider).status == AuthStatus.authenticated;
-      if (isAuth) {
+      final authState = ref.read(authProvider);
+      final isAuth = authState.status == AuthStatus.authenticated;
+      final role = authState.user?.role ?? '';
+      final isClient = role == 'client' || role == '';
+      if (isAuth && isClient) {
         ref.read(favoriProvider.notifier).load();
       }
     });
@@ -98,8 +100,12 @@ class _BiensListScreenState extends ConsumerState<BiensListScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(bienListProvider);
-    final isAuth =
-        ref.watch(authProvider).status == AuthStatus.authenticated;
+    final authState = ref.watch(authProvider);
+    final isAuth = authState.status == AuthStatus.authenticated;
+    // Admins et super-admins ne peuvent pas ajouter en favoris
+    final userRole = authState.user?.role ?? '';
+    final isClient = userRole == 'client' || userRole == '';
+    final canFavori = isAuth && isClient;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -235,9 +241,9 @@ class _BiensListScreenState extends ConsumerState<BiensListScreen> {
                               );
                             }
                             final bien = state.biens[index];
-                            // watch pour être réactif aux changements de favoris
+                            // watch pour être réactif aux changements de favoris (clients seulement)
                             final favorisState = ref.watch(favoriProvider);
-                            final isFavori = isAuth
+                            final isFavori = canFavori
                                 ? (favorisState.valueOrNull
                                         ?.any((b) => b.id == bien.id) ??
                                     false)
@@ -248,10 +254,10 @@ class _BiensListScreenState extends ConsumerState<BiensListScreen> {
                               child: BienCard(
                                 bien: bien,
                                 isFavori: isFavori,
-                                showFavoriButton: isAuth,
+                                showFavoriButton: canFavori,
                                 onTap: () => context
                                     .push('/biens/${bien.id}'),
-                                onFavoriTap: isAuth
+                                onFavoriTap: canFavori
                                     ? () => ref
                                         .read(favoriProvider.notifier)
                                         .toggle(bien.id)

@@ -1,8 +1,10 @@
 // lib/screens/paiement/kkiapay_screen.dart
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:dio/dio.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/api_service.dart';
@@ -58,53 +60,113 @@ class _KkiapayScreenState extends State<KkiapayScreen> {
         .replaceAll('<', '&lt;')
         .replaceAll('"', '&quot;');
 
-    // HTML avec le SDK KKiapay chargé en HTTPS
+    // HTML avec le SDK KKiapay chargé en HTTPS — optimisé pour petit écran émulateur
     final html = '''<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Paiement KKiapay</title>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      width:100%; height:100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background:#f0f4f8;
+      overflow-x: hidden;
+    }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background:#f5f5f5;
-      display:flex; align-items:center; justify-content:center;
-      min-height:100vh; padding:20px;
+      display:flex;
+      align-items: flex-start;
+      justify-content:center;
+      min-height: 100vh;
+      padding: 12px 12px 24px;
     }
     .card {
-      background:white; border-radius:20px; padding:28px;
-      max-width:380px; width:100%; text-align:center;
-      box-shadow:0 4px 24px rgba(0,0,0,0.10);
+      background:white;
+      border-radius:16px;
+      padding: 20px 16px;
+      width:100%;
+      max-width:420px;
+      text-align:center;
+      box-shadow:0 2px 16px rgba(0,0,0,0.10);
     }
-    .logo-text { font-size:26px; font-weight:800; color:#f0522e; letter-spacing:-1px; }
-    .secure { font-size:12px; color:#999; margin-bottom:20px; }
-    .amount { font-size:34px; font-weight:800; color:#1a1a2e; margin:12px 0 4px; }
-    .currency { font-size:16px; color:#666; margin-bottom:8px; }
-    .desc { color:#888; margin-bottom:24px; font-size:13px; line-height:1.5; }
+    .logo-text {
+      font-size: 22px;
+      font-weight: 800;
+      color: #f0522e;
+      letter-spacing: -0.5px;
+      margin-bottom: 2px;
+    }
+    .secure {
+      font-size: 11px;
+      color: #999;
+      margin-bottom: 14px;
+    }
+    .divider { border:none; border-top:1px solid #eee; margin: 12px 0; }
+    .amount {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1a1a2e;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .currency {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+    .desc {
+      color: #888;
+      margin-bottom: 16px;
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 0 4px;
+    }
     #pay-btn {
-      background:#f0522e; color:white; border:none;
-      padding:16px 0; border-radius:14px; font-size:16px;
-      font-weight:700; cursor:pointer; width:100%;
-      transition: background 0.2s;
+      background:#f0522e;
+      color:white;
+      border:none;
+      padding: 14px 0;
+      border-radius:12px;
+      font-size: 15px;
+      font-weight:700;
+      cursor:pointer;
+      width:100%;
+      transition: background 0.2s, transform 0.1s;
     }
-    #pay-btn:active { background:#c93d1e; }
-    #pay-btn:disabled { background:#ccc; cursor:not-allowed; }
-    #status { color:#888; font-size:13px; margin-top:14px; min-height:20px; }
+    #pay-btn:active { background:#c93d1e; transform: scale(0.98); }
+    #pay-btn:disabled { background:#ccc; cursor:not-allowed; transform:none; }
+    #status {
+      color: #666;
+      font-size: 12px;
+      margin-top: 10px;
+      min-height: 18px;
+      padding: 0 4px;
+    }
     .spinner {
-      display:none; width:20px; height:20px;
-      border:2px solid #f0522e; border-top-color:transparent;
-      border-radius:50%; animation:spin .7s linear infinite;
-      margin:12px auto 0;
+      display:none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #f0522e;
+      border-top-color: transparent;
+      border-radius:50%;
+      animation: spin .7s linear infinite;
+      margin: 10px auto 0;
     }
-    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* Assure que le widget popup KKiapay est au-dessus */
+    iframe, .kkiapay-iframe, [class*="kkiapay"] {
+      z-index: 9999 !important;
+      max-width: 100vw !important;
+    }
   </style>
 </head>
 <body>
 <div class="card">
   <div class="logo-text">KK<span style="color:#1a1a2e">iapay</span></div>
-  <div class="secure">Paiement sécurisé</div>
+  <div class="secure">Paiement 100% sécurisé</div>
+  <hr class="divider">
   <div class="amount">$montantFmt</div>
   <div class="currency">FCFA</div>
   <div class="desc">$descEscaped</div>
@@ -115,6 +177,13 @@ class _KkiapayScreenState extends State<KkiapayScreen> {
 
 <script src="https://cdn.kkiapay.me/k.js"></script>
 <script>
+  // Forcer window.open → navigation inline (émulateur Android WebView)
+  var _origOpen = window.open;
+  window.open = function(url, name, features) {
+    if (url) { window.location.href = url; return window; }
+    return _origOpen ? _origOpen.call(window, url, name, features) : null;
+  };
+
   var paid = false;
 
   function setStatus(msg) {
@@ -127,6 +196,7 @@ class _KkiapayScreenState extends State<KkiapayScreen> {
     btn.disabled = true;
     btn.textContent = 'Ouverture...';
     document.getElementById('spinner').style.display = 'block';
+    setStatus('');
 
     try {
       openKkiapayWidget({
@@ -140,16 +210,18 @@ class _KkiapayScreenState extends State<KkiapayScreen> {
       });
     } catch(e) {
       btn.disabled = false;
-      btn.textContent = 'Réessayer';
+      btn.textContent = 'Payer maintenant';
       document.getElementById('spinner').style.display = 'none';
-      setStatus('Erreur: ' + e.message);
+      setStatus('Erreur : ' + e.message);
     }
   }
 
   addSuccessListener(function(response) {
     if (paid) return;
     paid = true;
-    setStatus('Paiement réussi ! Confirmation en cours...');
+    document.getElementById('pay-btn').textContent = 'Paiement confirmé ✓';
+    setStatus('Confirmation en cours...');
+    document.getElementById('spinner').style.display = 'block';
     KkiapayFlutter.postMessage(JSON.stringify({
       event: 'success',
       transactionId: response.transactionId
@@ -170,6 +242,7 @@ class _KkiapayScreenState extends State<KkiapayScreen> {
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.transparent)
       ..addJavaScriptChannel(
         'KkiapayFlutter',
         onMessageReceived: (msg) => _onKkiapayMessage(msg.message),
@@ -181,8 +254,18 @@ class _KkiapayScreenState extends State<KkiapayScreen> {
           debugPrint('WebView error: ${err.description}');
           setState(() => _isLoading = false);
         },
+        onNavigationRequest: (request) {
+          return NavigationDecision.navigate;
+        },
       ))
       ..loadHtmlString(html, baseUrl: 'https://cdn.kkiapay.me');
+
+    // Configuration spécifique Android (émulateur + téléphone physique)
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final androidController =
+          _controller.platform as AndroidWebViewController;
+      androidController.setMediaPlaybackRequiresUserGesture(false);
+    }
   }
 
   void _onKkiapayMessage(String message) async {
@@ -240,6 +323,7 @@ class _KkiapayScreenState extends State<KkiapayScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF0F4F8),
       appBar: AppBar(
         title: const Text('Paiement sécurisé'),
         leading: IconButton(
@@ -249,23 +333,28 @@ class _KkiapayScreenState extends State<KkiapayScreen> {
       ),
       body: Stack(
         children: [
-          WebViewWidget(controller: _controller),
+          // WebView en plein écran
+          Positioned.fill(
+            child: WebViewWidget(controller: _controller),
+          ),
           if (_isLoading || _confirming)
-            Container(
-              color: Colors.white,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const CircularProgressIndicator(color: AppColors.primary),
-                    const SizedBox(height: 16),
-                    Text(
-                      _confirming
-                          ? 'Confirmation du paiement...'
-                          : 'Chargement...',
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ],
+            Positioned.fill(
+              child: Container(
+                color: Colors.white,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(color: AppColors.primary),
+                      const SizedBox(height: 16),
+                      Text(
+                        _confirming
+                            ? 'Confirmation du paiement...'
+                            : 'Chargement...',
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

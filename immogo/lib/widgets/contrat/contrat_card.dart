@@ -79,19 +79,33 @@ class ContratCard extends StatelessWidget {
               const Divider(),
               const SizedBox(height: 8),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _infoItem(context, 'Type',
-                      Formatters.transaction(contrat.typeContrat)),
-                  _infoItem(context, 'Total',
-                      Formatters.prix(contrat.montantTotal)),
-                  _infoItem(context, 'Payé',
-                      Formatters.prix(contrat.montantPaye)),
-                  _infoItem(context, 'Solde',
-                      Formatters.prix(contrat.soldeRestant),
-                      valueColor: contrat.soldeRestant > 0
-                          ? AppColors.error
-                          : AppColors.success),
+                  Flexible(
+                    flex: 2,
+                    child: _infoItem(context, 'Type',
+                        Formatters.transaction(contrat.typeContrat)),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    flex: 3,
+                    child: _infoItem(context, 'Total',
+                        Formatters.prix(contrat.montantTotal)),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    flex: 3,
+                    child: _infoItem(context, 'Payé',
+                        Formatters.prix(contrat.montantPaye)),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    flex: 3,
+                    child: _infoItem(context, 'Solde',
+                        Formatters.prix(contrat.soldeRestant),
+                        valueColor: contrat.soldeRestant > 0
+                            ? AppColors.error
+                            : AppColors.success),
+                  ),
                 ],
               ),
               if (contrat.dateContrat != null) ...[
@@ -119,6 +133,7 @@ class ContratCard extends StatelessWidget {
                 .labelSmall
                 ?.copyWith(color: AppColors.textSecondary)),
         Text(value,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600, color: valueColor)),
       ],

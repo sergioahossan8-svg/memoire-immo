@@ -112,26 +112,50 @@ class BienController extends Controller
     {
         $this->authorizeAgence($bien);
 
-        // Un bien vendu est définitif — l'admin ne peut plus changer
+        // Un bien VENDU est définitif — aucun changement possible
         if ($bien->statut === 'vendu') {
             return back()->withErrors(['statut' => 'Un bien vendu ne peut plus être modifié.']);
         }
 
-        $request->validate(['statut' => 'required|in:disponible,reserve,loue,indisponible']);
+        // Transitions autorisées selon le statut actuel :
+        // disponible → reserve, indisponible
+        // reserve    → libere (annuler), vendu, loue  (admin choisit)
+        // loue       → libere (mettre en disponible)
+        // indisponible → disponible
+        $transitionsAutorisees = [
+            'disponible'    => ['reserve', 'indisponible'],
+            'reserve'       => ['libere', 'vendu', 'loue'],
+            'loue'          => ['libere'],
+            'indisponible'  => ['disponible'],
+        ];
 
-        $ancienStatut = $bien->statut;
+        $statutsValides = array_merge(
+            ['disponible', 'reserve', 'vendu', 'loue', 'libere', 'indisponible']
+        );
+
+        $request->validate(['statut' => 'required|in:disponible,reserve,vendu,loue,libere,indisponible']);
+
+        $ancienStatut  = $bien->statut;
         $nouveauStatut = $request->statut;
 
-        $bien->update(['statut' => $nouveauStatut]);
+        // Vérifier que la transition est autorisée
+        $autorise = $transitionsAutorisees[$ancienStatut] ?? [];
+        if (!in_array($nouveauStatut, $autorise)) {
+            return back()->withErrors([
+                'statut' => "Transition interdite : de « {$ancienStatut} » vers « {$nouveauStatut} »."
+            ]);
+        }
 
-        // Si on remet en disponible, on annule les contrats en attente liés
-        if ($nouveauStatut === 'disponible' && in_array($ancienStatut, ['reserve', 'loue'])) {
-            // Annuler les contrats actifs/en_attente sur ce bien
+        // « libere » signifie "remettre en disponible"
+        $statutReel = ($nouveauStatut === 'libere') ? 'disponible' : $nouveauStatut;
+        $bien->update(['statut' => $statutReel]);
+
+        // Si on remet en disponible (via libere ou directement), annuler les contrats en attente
+        if ($statutReel === 'disponible' && in_array($ancienStatut, ['reserve', 'loue'])) {
             $bien->contrats()
                 ->whereIn('statut_contrat', ['en_attente', 'actif'])
                 ->update(['statut_contrat' => 'annule']);
 
-            // Notifier les clients concernés
             foreach ($bien->contrats()->where('statut_contrat', 'annule')->get() as $contrat) {
                 \App\Models\NotificationImmogo::create([
                     'user_id' => $contrat->client_id,
@@ -143,13 +167,15 @@ class BienController extends Controller
         }
 
         $messages = [
-            'disponible'   => 'Bien remis en disponible. Il réapparaît sur le site.',
+            'disponible'   => 'Bien remis en disponible.',
             'reserve'      => 'Bien marqué comme réservé.',
+            'vendu'        => 'Bien marqué comme vendu (définitif).',
             'loue'         => 'Bien marqué comme loué.',
+            'libere'       => 'Bien libéré et remis en disponible.',
             'indisponible' => 'Bien marqué comme indisponible.',
         ];
 
-        \App\Models\ActivityLog::log('bien_statut', 'Statut bien "' . $bien->titre . '" → ' . $nouveauStatut, $bien);
+        \App\Models\ActivityLog::log('bien_statut', 'Statut bien "' . $bien->titre . '" → ' . $statutReel, $bien);
         return back()->with('success', $messages[$nouveauStatut] ?? 'Statut mis à jour.');
     }
 

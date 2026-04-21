@@ -87,7 +87,8 @@ class AppTheme {
             borderSide: const BorderSide(color: AppColors.error, width: 2),
           ),
           hintStyle: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 14),
-          labelStyle: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 14),
+          labelStyle: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+          floatingLabelStyle: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
           errorStyle: GoogleFonts.poppins(color: AppColors.error, fontSize: 12),
         ),
         cardTheme: CardThemeData(

@@ -21,10 +21,15 @@ class BienDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final detailAsync = ref.watch(bienDetailProvider(id));
-    final isAuth = ref.watch(authProvider).status == AuthStatus.authenticated;
+    final authState = ref.watch(authProvider);
+    final isAuth = authState.status == AuthStatus.authenticated;
+    // Admins et super-admins ne peuvent pas ajouter en favoris
+    final userRole = authState.user?.role ?? '';
+    final isClient = userRole == 'client' || userRole == '';
+    final canFavori = isAuth && isClient;
 
-    // Charger les favoris si auth et pas encore chargés
-    if (isAuth) {
+    // Charger les favoris si client auth et pas encore chargés
+    if (canFavori) {
       final favorisState = ref.watch(favoriProvider);
       if (favorisState is AsyncLoading) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -43,9 +48,9 @@ class BienDetailScreen extends ConsumerWidget {
         data: (data) {
           final bien = data['bien'] as BienModel;
           final similaires = data['similaires'] as List<BienModel>;
-          // watch pour être réactif aux changements de favoris
-          final favorisState = isAuth ? ref.watch(favoriProvider) : null;
-          final isFavori = isAuth
+          // watch pour être réactif aux changements de favoris (clients seulement)
+          final favorisState = canFavori ? ref.watch(favoriProvider) : null;
+          final isFavori = canFavori
               ? (favorisState?.valueOrNull?.any((b) => b.id == bien.id) ?? false)
               : false;
           final photos = bien.photos ?? [];
@@ -80,7 +85,7 @@ class BienDetailScreen extends ConsumerWidget {
                         ),
                 ),
                 actions: [
-                  if (isAuth)
+                  if (canFavori)
                     IconButton(
                       icon: Icon(
                           isFavori ? Icons.favorite : Icons.favorite_border,
@@ -120,14 +125,14 @@ class BienDetailScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.1),
+                            color: _statutColor(bien.statut).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.success),
+                            border: Border.all(color: _statutColor(bien.statut)),
                           ),
                           child: Text(
                             Formatters.statut(bien.statut),
-                            style: const TextStyle(
-                                color: AppColors.success,
+                            style: TextStyle(
+                                color: _statutColor(bien.statut),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600),
                           ),
@@ -189,8 +194,8 @@ class BienDetailScreen extends ConsumerWidget {
                         const Divider(),
                         const SizedBox(height: 16),
                       ],
-                      // Boutons action
-                      if (isAuth && bien.statut == 'disponible') ...[
+                      // Boutons action (seulement si disponible et client)
+                      if (isClient && bien.statut == 'disponible') ...[
                         Text('Passer à l\'action',
                             style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 12),
@@ -216,6 +221,37 @@ class BienDetailScreen extends ConsumerWidget {
                           onPressed: () => context.go('/login'),
                           icon: const Icon(Icons.login),
                           label: const Text('Connectez-vous pour réserver'),
+                        ),
+                        const SizedBox(height: 20),
+                        const Divider(),
+                        const SizedBox(height: 16),
+                      ] else if (bien.statut != 'disponible') ...[
+                        // Afficher message informatif si le bien n'est plus disponible
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: _statutColor(bien.statut).withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: _statutColor(bien.statut).withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(_statutIcon(bien.statut),
+                                  color: _statutColor(bien.statut), size: 22),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  _statutMessage(bien.statut),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(color: _statutColor(bien.statut)),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 20),
                         const Divider(),
@@ -347,5 +383,46 @@ class BienDetailScreen extends ConsumerWidget {
     // Le type de contrat est celui du bien (defini par l'admin, non modifiable)
     // L'ecran de reservation le recuperera directement depuis bien.transaction
     context.push('/reservation/${bien.id}?type=complet');
+  }
+
+  Color _statutColor(String statut) {
+    switch (statut) {
+      case 'disponible':
+        return AppColors.success;
+      case 'reserve':
+        return AppColors.premium;
+      case 'vendu':
+        return AppColors.error;
+      case 'loue':
+        return AppColors.secondary;
+      default:
+        return AppColors.textSecondary;
+    }
+  }
+
+  IconData _statutIcon(String statut) {
+    switch (statut) {
+      case 'reserve':
+        return Icons.hourglass_empty;
+      case 'vendu':
+        return Icons.sell;
+      case 'loue':
+        return Icons.key;
+      default:
+        return Icons.block;
+    }
+  }
+
+  String _statutMessage(String statut) {
+    switch (statut) {
+      case 'reserve':
+        return 'Ce bien est actuellement réservé et en attente de paiement du solde.';
+      case 'vendu':
+        return 'Ce bien a été vendu et n\'est plus disponible.';
+      case 'loue':
+        return 'Ce bien est actuellement loué.';
+      default:
+        return 'Ce bien n\'est pas disponible à la vente ou location pour le moment.';
+    }
   }
 }
