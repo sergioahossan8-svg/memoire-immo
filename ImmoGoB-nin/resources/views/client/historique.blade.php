@@ -7,7 +7,7 @@
     <h1 class="text-2xl font-bold text-gray-800 mb-6">Mon Historique</h1>
 
     @forelse($contrats as $contrat)
-        @php $photo = $contrat->bien->photos->first(); @endphp
+        @php $photo = $contrat->bien ? ($contrat->bien->photoPrincipale ?? $contrat->bien->photos->first()) : null; @endphp
         <div class="card p-5 mb-4 flex gap-4">
             <div class="w-24 h-20 rounded-xl overflow-hidden flex-shrink-0">
                 @if($photo)
@@ -21,10 +21,10 @@
             <div class="flex-1">
                 <div class="flex items-start justify-between">
                     <div>
-                        <h3 class="font-semibold text-gray-800">{{ $contrat->bien->titre }}</h3>
+                        <h3 class="font-semibold text-gray-800">{{ $contrat->bien?->titre ?? 'Bien supprimé' }}</h3>
                         <p class="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
                             <i class="fas fa-map-marker-alt text-cyan-400"></i>
-                            {{ $contrat->bien->localisation }}, {{ $contrat->bien->ville }}
+                            {{ $contrat->bien?->localisation ?? '—' }}, {{ $contrat->bien?->ville ?? '' }}
                         </p>
                     </div>
                     <span class="badge-{{ $contrat->statut_contrat === 'actif' ? 'disponible' : ($contrat->statut_contrat === 'en_attente' ? 'reserve' : 'vendu') }}">
@@ -43,9 +43,11 @@
                             Payer le solde ({{ number_format($contrat->getSoldeRestant(), 0, ',', ' ') }} FCFA)
                         </a>
                     @endif
-                    <a href="{{ route('biens.show', $contrat->bien) }}" class="text-xs text-cyan-500 hover:underline">
-                        Voir l'annonce
-                    </a>
+                    @if($contrat->bien)
+                        <a href="{{ route('biens.show', $contrat->bien) }}" class="text-xs text-cyan-500 hover:underline">
+                            Voir l'annonce
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

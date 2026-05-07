@@ -14,7 +14,9 @@ class ContratController extends Controller
         $contrats = auth()->user()->contrats()
             ->with(['bien.photos', 'bien.agence', 'paiements'])
             ->latest()
-            ->get();
+            ->get()
+            ->filter(fn($contrat) => $contrat->bien !== null)
+            ->values();
 
         return view('client.historique', compact('contrats'));
     }
@@ -32,11 +34,14 @@ class ContratController extends Controller
     {
         abort_if($bien->statut !== 'disponible' || !$bien->is_published, 422, 'Ce bien n\'est plus disponible.');
 
+        // La date limite est fixée à 15 jours (envoyée depuis le formulaire en champ caché)
+        // On ignore la valeur soumise et on calcule côté serveur pour éviter toute manipulation
         $data = $request->validate([
             'type_contrat'  => 'required|in:location,vente',
-            'date_limite'   => 'required|date|after:today',
             'mode_paiement' => 'required|in:mobile_money,virement,especes,carte',
         ]);
+
+        $data['date_limite'] = now()->addDays(15)->format('Y-m-d');
 
         // Stocker les infos en session — le contrat sera créé APRÈS confirmation KKiapay
         session([

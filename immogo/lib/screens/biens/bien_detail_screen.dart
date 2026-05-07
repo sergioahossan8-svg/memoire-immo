@@ -85,14 +85,42 @@ class BienDetailScreen extends ConsumerWidget {
                         ),
                 ),
                 actions: [
-                  if (canFavori)
-                    IconButton(
-                      icon: Icon(
-                          isFavori ? Icons.favorite : Icons.favorite_border,
-                          color: isFavori ? Colors.red : Colors.white),
-                      onPressed: () =>
-                          ref.read(favoriProvider.notifier).toggle(bien.id),
+                  // Bouton favori toujours visible — redirige vers login si non connecté
+                  IconButton(
+                    icon: Icon(
+                      isFavori ? Icons.favorite : Icons.favorite_border,
+                      color: isFavori ? Colors.red : Colors.white,
                     ),
+                    onPressed: () {
+                      if (!isAuth) {
+                        showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Connexion requise'),
+                            content: const Text(
+                                'Connectez-vous pour ajouter ce bien à vos favoris.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Annuler'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  context.go('/login');
+                                },
+                                child: const Text('Se connecter'),
+                              ),
+                            ],
+                          ),
+                        );
+                        return;
+                      }
+                      if (canFavori) {
+                        ref.read(favoriProvider.notifier).toggle(bien.id);
+                      }
+                    },
+                  ),
                 ],
               ),
               SliverToBoxAdapter(

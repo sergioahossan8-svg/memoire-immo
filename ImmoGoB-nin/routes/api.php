@@ -8,11 +8,16 @@ use App\Http\Controllers\Api\PaiementApiController;
 use App\Http\Controllers\Api\ProfilApiController;
 use App\Http\Controllers\Api\EstimationApiController;
 use App\Http\Controllers\Api\NotificationApiController;
+use App\Http\Controllers\Api\PasswordResetApiController;
 use Illuminate\Support\Facades\Route;
 
 // ── Auth (public) ──────────────────────────────────────────────────────────
 Route::post('/login', [AuthApiController::class, 'login']);
 Route::post('/register', [AuthApiController::class, 'register']);
+
+// ── Mot de passe oublié (public) ───────────────────────────────────────────
+Route::post('/forgot-password', [PasswordResetApiController::class, 'sendResetLink']);
+Route::post('/reset-password', [PasswordResetApiController::class, 'resetPassword']);
 
 // ── Biens (public) ──────────────────────────────────────────────────────────
 Route::get('/biens', [BienApiController::class, 'index']);

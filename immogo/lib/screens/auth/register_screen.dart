@@ -76,7 +76,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Créer un compte'),
-        leading: BackButton(onPressed: () => context.go('/login')),
+        leading: BackButton(onPressed: () => context.go('/')),
       ),
       body: SafeArea(
         child: GestureDetector(
@@ -200,6 +200,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => context.go('/'),
+                      child: const Text(
+                        'Continuer sans compte →',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 32),
                 ],

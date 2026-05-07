@@ -8,7 +8,6 @@ import '../../providers/bien_provider.dart';
 import '../../providers/favori_provider.dart';
 import '../../widgets/bien/bien_card.dart';
 import '../../widgets/common/loading_widget.dart';
-import '../../screens/biens/estimation_screen.dart';
 
 class BiensListScreen extends ConsumerStatefulWidget {
   const BiensListScreen({super.key});
@@ -254,19 +253,48 @@ class _BiensListScreenState extends ConsumerState<BiensListScreen> {
                               child: BienCard(
                                 bien: bien,
                                 isFavori: isFavori,
-                                showFavoriButton: canFavori,
-                                onTap: () => context
-                                    .push('/biens/${bien.id}'),
-                                onFavoriTap: canFavori
-                                    ? () => ref
-                                        .read(favoriProvider.notifier)
-                                        .toggle(bien.id)
-                                    : null,
+                                // Toujours afficher le bouton favori
+                                showFavoriButton: true,
+                                onTap: () => context.push('/biens/${bien.id}'),
+                                onFavoriTap: () {
+                                  if (!isAuth) {
+                                    // Non connecté → rediriger vers login
+                                    _showLoginRequired(context);
+                                    return;
+                                  }
+                                  if (canFavori) {
+                                    ref.read(favoriProvider.notifier).toggle(bien.id);
+                                  }
+                                },
                               ),
                             );
                           },
                         ),
                       ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLoginRequired(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Connexion requise'),
+        content: const Text(
+            'Connectez-vous pour ajouter ce bien à vos favoris.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.go('/login');
+            },
+            child: const Text('Se connecter'),
           ),
         ],
       ),

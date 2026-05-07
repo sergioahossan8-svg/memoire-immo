@@ -54,20 +54,26 @@
                     <span class="text-gray-700 font-medium">
                         {{ $bien->transaction === 'location' ? 'Location' : 'Vente' }}
                     </span>
-                    <span class="ml-auto text-xs text-gray-400 italic">Défini par l'agence</span>
                 </div>
                 {{-- Champ caché pour soumettre la valeur --}}
                 <input type="hidden" name="type_contrat" value="{{ $bien->transaction }}">
             </div>
 
-            <div>
-                <label class="form-label">Date limite de paiement du solde</label>
-                <input type="date" name="date_limite" class="form-input"
-                    min="{{ now()->addDay()->format('Y-m-d') }}"
-                    value="{{ now()->addDays(30)->format('Y-m-d') }}"
-                    required>
-                @error('date_limite')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+            {{-- Date limite fixe = now + 15 jours (non modifiable par le client) --}}
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-info-circle text-amber-500 mt-0.5 flex-shrink-0"></i>
+                    <div>
+                        <p class="text-sm font-semibold text-amber-800">Délai de paiement : 15 jours</p>
+                        <p class="text-xs text-amber-700 mt-1 leading-relaxed">
+                            Vous avez 15 jours pour solder votre réservation. Passé ce délai, votre réservation sera annulée,
+                            le bien redeviendra disponible et votre argent vous sera restitué.
+                        </p>
+                    </div>
+                </div>
             </div>
+            {{-- Champ caché : date limite = aujourd'hui + 15 jours --}}
+            <input type="hidden" name="date_limite" value="{{ now()->addDays(15)->format('Y-m-d') }}">
 
             <div>
                 <label class="form-label">Mode de paiement de l'acompte</label>
@@ -79,14 +85,14 @@
                 </select>
             </div>
 
-            {{-- KKiapay badge --}}
+            {{-- Badge paiement sécurisé --}}
             <div class="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
                 <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-shield-alt text-blue-500"></i>
                 </div>
                 <div>
-                    <p class="text-sm font-semibold text-gray-800">Paiement sécurisé via KKiapay</p>
-                    <p class="text-xs text-gray-500">Vous serez redirigé vers KKiapay pour effectuer le paiement.</p>
+                    <p class="text-sm font-semibold text-gray-800">Paiement 100% sécurisé</p>
+                    <p class="text-xs text-gray-500">Vos données sont protégées.</p>
                 </div>
             </div>
 

@@ -104,6 +104,21 @@
         </div>
     @endif
 
+    {{-- Message 403 personnalisé pour les admins --}}
+    @if(session('error_403'))
+        <div class="max-w-7xl mx-auto px-4 mt-4">
+            <div class="bg-amber-50 border border-amber-300 text-amber-800 px-5 py-4 rounded-xl flex items-start gap-3 shadow-sm">
+                <div class="flex-shrink-0 mt-0.5">
+                    <i class="fas fa-shield-alt text-amber-500 text-xl"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-amber-900 mb-0.5">Action non disponible pour votre compte</p>
+                    <p class="text-sm">{{ session('error_403') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Content --}}
     <main>
         @yield('content')
@@ -114,7 +129,7 @@
         <div class="flex items-center justify-around py-2">
             <a href="{{ route('home') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('home') ? 'text-cyan-500' : 'text-gray-400' }}">
                 <i class="fas fa-home text-lg"></i>
-                <span class="text-xs">Home</span>
+                <span class="text-xs">Accueil</span>
             </a>
             @auth
             <a href="{{ route('client.favoris') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('client.favoris') ? 'text-cyan-500' : 'text-gray-400' }}">
@@ -123,7 +138,7 @@
             </a>
             <a href="{{ route('client.historique') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('client.historique') ? 'text-cyan-500' : 'text-gray-400' }}">
                 <i class="fas fa-history text-lg"></i>
-                <span class="text-xs">History</span>
+                <span class="text-xs">Historique</span>
             </a>
             <a href="{{ route('client.notifications') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('client.notifications') ? 'text-cyan-500' : 'text-gray-400' }}">
                 <i class="fas fa-bell text-lg"></i>
@@ -134,7 +149,7 @@
                 <span class="text-xs">Profil</span>
             </a>
             @else
-            <a href="{{ route('login') }}" class="flex flex-col items-center gap-1 text-gray-400">
+            <a href="{{ route('login') }}" class="flex flex-col items-center gap-1 text-cyan-500">
                 <i class="fas fa-sign-in-alt text-lg"></i>
                 <span class="text-xs">Connexion</span>
             </a>

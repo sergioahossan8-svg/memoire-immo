@@ -11,7 +11,9 @@ class FavoriController extends Controller
 {
     public function index()
     {
-        $favoris = auth()->user()->favoris()->with(['bien.photos', 'bien.agence', 'bien.typeBien'])->get();
+        $favoris = auth()->user()->favoris()->with(['bien.photos', 'bien.agence', 'bien.typeBien'])->get()
+            ->filter(fn($favori) => $favori->bien !== null)
+            ->values();
         return view('client.favoris', compact('favoris'));
     }
 

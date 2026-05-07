@@ -32,6 +32,14 @@
             <form method="POST" action="{{ route('login.post') }}" class="space-y-4">
                 @csrf
 
+                {{-- Message succès réinitialisation --}}
+                @if(session('status'))
+                    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
+                        <i class="fas fa-check-circle mt-0.5 flex-shrink-0"></i>
+                        <span>{{ session('status') }}</span>
+                    </div>
+                @endif
+
                 <div>
                     <label class="form-label">E-mail ou téléphone</label>
                     <div class="relative">
@@ -45,7 +53,7 @@
                 <div>
                     <div class="flex items-center justify-between mb-1.5">
                         <label class="form-label mb-0">Mot de passe</label>
-                        <a href="#" class="text-xs text-cyan-500 hover:underline">Mot de passe oublié ?</a>
+                        <a href="{{ route('password.request') }}" class="text-xs text-cyan-500 hover:underline">Mot de passe oublié ?</a>
                     </div>
                     <div class="relative">
                         <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>

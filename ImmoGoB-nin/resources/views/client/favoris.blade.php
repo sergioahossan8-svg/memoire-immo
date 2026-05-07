@@ -36,7 +36,9 @@
     @else
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @foreach($favoris as $favori)
-                @include('components.bien-card', ['bien' => $favori->bien])
+                @if($favori->bien)
+                    @include('components.bien-card', ['bien' => $favori->bien])
+                @endif
             @endforeach
         </div>
     @endif

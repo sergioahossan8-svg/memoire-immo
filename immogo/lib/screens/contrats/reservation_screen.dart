@@ -245,15 +245,6 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
                                       fontWeight: FontWeight.w600),
                             ),
                             const Spacer(),
-                            Text(
-                              'Non modifiable',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                      fontStyle: FontStyle.italic),
-                            ),
                           ],
                         ),
                       ),
@@ -351,7 +342,7 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  'Vous allez payer la totalité du bien via KKiapay.',
+                                  'Vous allez payer la totalité du bien de manière sécurisée.',
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium
@@ -365,8 +356,8 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
                       const SizedBox(height: 28),
                       CustomButton(
                         label: _isComplet
-                            ? 'Payer en totalité via KKiapay'
-                            : 'Payer l\'acompte via KKiapay',
+                            ? 'Payer en totalité'
+                            : 'Payer l\'acompte',
                         icon: Icons.payment,
                         isLoading: _isLoading,
                         onPressed: _isLoading
@@ -376,7 +367,7 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
                       const SizedBox(height: 12),
                       Center(
                         child: Text(
-                          'Paiement sécurisé via KKiapay',
+                          'Paiement 100% sécurisé',
                           textAlign: TextAlign.center,
                           style: Theme.of(context)
                               .textTheme

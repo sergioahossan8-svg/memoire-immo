@@ -44,6 +44,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     if (!mounted) return;
 
+    // Si déjà authentifié (ex: vient de se connecter), ne pas écraser l'état
+    final currentStatus = ref.read(authProvider).status;
+    if (currentStatus == AuthStatus.authenticated) return;
+
     // Vérifier d'abord le token local (sans réseau)
     final authService = ref.read(authServiceProvider);
     final hasToken = await authService.hasLocalToken();
@@ -51,7 +55,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
 
     if (!hasToken) {
-      // Pas de token → mettre l'état à unauthenticated, GoRouter redirige vers /login
+      // Pas de token → visiteur non connecté → accueil (liste des biens)
       ref.read(authProvider.notifier).setUnauthenticated();
       return;
     }

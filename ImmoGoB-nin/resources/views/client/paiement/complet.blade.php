@@ -46,24 +46,24 @@
                     <span class="text-gray-700 font-medium">
                         {{ $bien->transaction === 'location' ? 'Location' : 'Vente' }}
                     </span>
-                    <span class="ml-auto text-xs text-gray-400 italic">Défini par l'agence</span>
+                    <span class="ml-auto text-xs text-gray-400 italic">Non modifiable</span>
                 </div>
                 <input type="hidden" name="type_contrat" value="{{ $bien->transaction }}">
             </div>
 
-            {{-- KKiapay badge --}}
+            {{-- Badge paiement sécurisé --}}
             <div class="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
                 <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-shield-alt text-blue-500"></i>
                 </div>
                 <div>
-                    <p class="text-sm font-semibold text-gray-800">Paiement sécurisé via KKiapay</p>
+                    <p class="text-sm font-semibold text-gray-800">Paiement 100% sécurisé</p>
                     <p class="text-xs text-gray-500">Mobile Money (MTN, Moov), carte bancaire et plus</p>
                 </div>
             </div>
 
             <button type="submit" class="btn-primary w-full">
-                <i class="fas fa-lock"></i> Payer {{ $bien->prix_formate }} avec KKiapay
+                <i class="fas fa-lock"></i> Payer {{ $bien->prix_formate }}
             </button>
             <a href="{{ route('biens.show', $bien) }}" class="btn-secondary w-full text-center block">Annuler</a>
         </form>

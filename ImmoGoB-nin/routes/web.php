@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Client\BienController as ClientBienController;
 use App\Http\Controllers\Client\FavoriController;
 use App\Http\Controllers\Client\ContratController;
@@ -26,8 +27,16 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.post');
-});
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+    // ── Mot de passe oublié ───────────────────────────────────────────────────
+    Route::get('/mot-de-passe-oublie', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
+    Route::post('/mot-de-passe-oublie', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reinitialiser-mot-de-passe/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reinitialiser-mot-de-passe', [PasswordResetController::class, 'resetPassword'])->name('password.update');
+
+    // ── Page de redirection universelle (mobile deep link + fallback web) ─────
+    Route::get('/mobile/reset-password', [PasswordResetController::class, 'mobileRedirect'])->name('password.mobile.redirect');
+});Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 // ─── Espace Client (authentifié) ─────────────────────────────────────────────
 Route::middleware(['auth', 'role.check:client'])->prefix('client')->name('client.')->group(function () {

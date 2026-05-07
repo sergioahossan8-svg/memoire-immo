@@ -50,6 +50,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final data = await _authService.login(email, password);
       final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
+      // On marque immédiatement comme authentifié — le token est déjà sauvegardé
       state = AuthState(status: AuthStatus.authenticated, user: user);
     } on DioException catch (e) {
       final msg = extractErrorMessage(e);

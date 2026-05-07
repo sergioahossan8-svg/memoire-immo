@@ -6,7 +6,7 @@
 <div class="max-w-2xl mx-auto px-4 py-8">
     <div class="card p-8">
         <h1 class="text-2xl font-bold text-gray-800 mb-1">Paiement sécurisé</h1>
-        <p class="text-gray-500 text-sm mb-6">Vous allez payer via KKiapay — Mobile Money (MTN, Moov) et carte bancaire.</p>
+        <p class="text-gray-500 text-sm mb-6">Complétez votre paiement en toute sécurité — Mobile Money (MTN, Moov) et carte bancaire.</p>
 
         <div class="bg-gray-50 rounded-xl p-5 mb-6">
             <div class="flex items-center justify-between mb-3">
@@ -24,7 +24,7 @@
                 <i class="fas fa-shield-alt text-blue-500"></i>
             </div>
             <div>
-                <p class="text-sm font-semibold text-gray-800">Paiement sécurisé via KKiapay</p>
+                <p class="text-sm font-semibold text-gray-800">Paiement 100% sécurisé</p>
                 <p class="text-xs text-gray-500">MTN Mobile Money, Moov Money, Visa, Mastercard</p>
             </div>
         </div>
@@ -37,7 +37,7 @@
 
         <button id="payBtn" onclick="lancerKkiapay()" class="btn-primary w-full text-lg py-4">
             <i class="fas fa-lock"></i>
-            Payer {{ number_format($montant, 0, ',', ' ') }} FCFA avec KKiapay
+            Payer {{ number_format($montant, 0, ',', ' ') }} FCFA
         </button>
 
         <a href="{{ url()->previous() }}" class="btn-secondary w-full text-center block mt-3">Annuler</a>

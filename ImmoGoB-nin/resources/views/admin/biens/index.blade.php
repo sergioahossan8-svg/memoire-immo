@@ -89,7 +89,7 @@
                                     <button type="submit"
                                         onclick="return confirm('Marquer ce bien comme VENDU ? Cette action est irréversible.')"
                                         class="text-xs bg-red-50 hover:bg-red-100 text-red-600 font-medium px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-                                        <i class="fas fa-gavel text-xs"></i> Vendu
+                                         Vendu
                                     </button>
                                 </form>
                                 {{-- Marquer loué --}}
@@ -99,7 +99,7 @@
                                     <button type="submit"
                                         onclick="return confirm('Marquer ce bien comme Loué ?')"
                                         class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-                                        <i class="fas fa-key text-xs"></i> Loué
+                                        </i> Loué
                                     </button>
                                 </form>
                             </div>
@@ -114,7 +114,7 @@
                                     <button type="submit"
                                         onclick="return confirm('Libérer ce bien loué ? Il redeviendra disponible.')"
                                         class="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-medium px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-                                        <i class="fas fa-unlock text-xs"></i> Libérer
+                                        Libérer
                                     </button>
                                 </form>
                             </div>
@@ -145,15 +145,15 @@
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
                             <a href="{{ route('admin.biens.edit', $bien) }}"
-                                class="p-2 text-gray-400 hover:text-cyan-500 transition"
+                                class="p-2 text-gray-400 hover:text-cyan-500 transition rounded-lg hover:bg-cyan-50"
                                 title="Modifier">
-                                <i class="fas fa-edit text-sm"></i>
+                                <i class="fas fa-pen text-sm"></i>
                             </a>
                             @if($bien->statut !== 'vendu')
                                 <form method="POST" action="{{ route('admin.biens.destroy', $bien) }}"
                                     onsubmit="return confirm('Supprimer ce bien définitivement ?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="p-2 text-gray-400 hover:text-red-500 transition" title="Supprimer">
+                                    <button type="submit" class="p-2 text-gray-400 hover:text-red-500 transition rounded-lg hover:bg-red-50" title="Supprimer">
                                         <i class="fas fa-trash text-sm"></i>
                                     </button>
                                 </form>
@@ -164,7 +164,7 @@
             @empty
                 <tr>
                     <td colspan="5" class="px-6 py-12 text-center text-gray-400">
-                        <i class="fas fa-home text-4xl mb-3 block text-gray-200"></i>
+                        <i class="fas fa-home text-4xl mb-3 block"></i>
                         Aucun bien pour le moment.
                     </td>
                 </tr>

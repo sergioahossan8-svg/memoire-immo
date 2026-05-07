@@ -79,7 +79,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: size.height * 0.05),
+                      // Bouton retour vers la liste des biens
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () => context.go('/'),
+                          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+                          label: const Text('Retour aux biens'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.textSecondary,
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: size.height * 0.03),
                       Center(
                         child: Column(children: [
                           Icon(
@@ -147,7 +160,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? 'Min. 8 caractères'
                             : null,
                       ),
-                      const SizedBox(height: 28),
+                      // Lien mot de passe oublié
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => context.go('/forgot-password'),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 0),
+                          ),
+                          child: const Text(
+                            'Mot de passe oublié ?',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       CustomButton(
                         label: 'Se connecter',
                         isLoading: isLoading,
@@ -169,6 +201,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+                      // Lien pour explorer sans compte
+                      Center(
+                        child: TextButton(
+                          onPressed: () => context.go('/'),
+                          child: const Text(
+                            'Continuer sans compte →',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 24),
                     ],

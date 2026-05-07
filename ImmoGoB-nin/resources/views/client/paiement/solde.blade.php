@@ -6,7 +6,7 @@
 <div class="max-w-2xl mx-auto px-4 py-8">
     <div class="card p-8">
         <h1 class="text-2xl font-bold text-gray-800 mb-2">Paiement</h1>
-        <p class="text-gray-500 text-sm mb-6">Vous allez être redirigé vers KKiapay pour effectuer votre paiement en toute sécurité.</p>
+        <p class="text-gray-500 text-sm mb-6">Finalisez votre paiement en toute sécurité.</p>
 
         {{-- Récap montants --}}
         <div class="grid grid-cols-3 gap-4 mb-6">
@@ -52,19 +52,19 @@
                     min="1" required>
             </div>
 
-            {{-- KKiapay badge --}}
+            {{-- Badge paiement sécurisé --}}
             <div class="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
                 <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-shield-alt text-blue-500"></i>
                 </div>
                 <div>
-                    <p class="text-sm font-semibold text-gray-800">Paiement sécurisé via KKiapay</p>
+                    <p class="text-sm font-semibold text-gray-800">Paiement 100% sécurisé</p>
                     <p class="text-xs text-gray-500">Mobile Money (MTN, Moov), carte bancaire et plus</p>
                 </div>
             </div>
 
             <button type="submit" class="btn-primary w-full">
-                <i class="fas fa-lock"></i> Payer maintenant avec KKiapay
+                <i class="fas fa-lock"></i> Payer maintenant
             </button>
             <a href="{{ route('client.historique') }}" class="btn-secondary w-full text-center block">Annuler</a>
         </form>

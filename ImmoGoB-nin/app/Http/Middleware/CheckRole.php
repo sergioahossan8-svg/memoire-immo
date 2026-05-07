@@ -22,6 +22,14 @@ class CheckRole
             }
         }
 
+        // Message personnalisé selon le rôle de l'utilisateur
+        if (in_array($user->role, ['admin_agence', 'super_admin'])) {
+            return redirect()->back()->with(
+                'error_403',
+                'En tant qu\'administrateur, vous ne pouvez pas effectuer de réservation ou de paiement. Cette fonctionnalité est réservée aux clients.'
+            );
+        }
+
         abort(403, 'Accès non autorisé.');
     }
 }
