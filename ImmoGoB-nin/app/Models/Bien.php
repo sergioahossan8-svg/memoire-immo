@@ -9,15 +9,19 @@ class Bien extends Model
     protected $fillable = [
         'agence_id', 'type_bien_id', 'titre', 'description', 'prix',
         'superficie', 'localisation', 'ville', 'chambres', 'salles_bain',
-        'transaction', 'statut', 'is_premium', 'is_published',
+        'transaction', 'avance_mois', 'caution_eau', 'caution_electricite',
+        'statut', 'is_premium', 'is_published',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_premium' => 'boolean',
-            'is_published' => 'boolean',
-            'prix' => 'decimal:2',
+            'is_premium'          => 'boolean',
+            'is_published'        => 'boolean',
+            'prix'                => 'decimal:2',
+            'caution_eau'         => 'decimal:2',
+            'caution_electricite' => 'decimal:2',
+            'avance_mois'         => 'integer',
         ];
     }
 
@@ -53,6 +57,30 @@ class Bien extends Model
 
     public function getPrixFormateAttribute(): string
     {
-        return number_format($this->prix, 0, ',', ' ') . ' FCFA';
+        $base = number_format($this->prix, 0, ',', ' ') . ' FCFA';
+        return $this->transaction === 'location' ? $base . ' / mois' : $base;
+    }
+
+    /**
+     * Montant total à payer pour une location :
+     * (prix × avance_mois) + caution_eau + caution_electricite
+     */
+    public function getMontantTotalLocationAttribute(): float
+    {
+        $avance = (float) $this->prix * ($this->avance_mois ?? 1);
+        $eau    = (float) ($this->caution_eau ?? 0);
+        $elec   = (float) ($this->caution_electricite ?? 0);
+        return $avance + $eau + $elec;
+    }
+
+    /**
+     * Montant de l'acompte (10% du montant total)
+     */
+    public function getAcompteAttribute(): float
+    {
+        $base = $this->transaction === 'location'
+            ? $this->montant_total_location
+            : (float) $this->prix;
+        return $base * 0.10;
     }
 }

@@ -105,22 +105,36 @@ class BienApiController extends Controller
             }
         }
 
-        return [
-            'id'          => $bien->id,
-            'titre'       => $bien->titre,
-            'prix'        => (float) $bien->prix,
-            'prix_formate' => number_format($bien->prix, 0, ',', ' ') . ' FCFA',
-            'superficie'  => $bien->superficie,
-            'localisation'=> $bien->localisation,
-            'ville'       => $bien->ville,
-            'chambres'    => $bien->chambres,
-            'salles_bain' => $bien->salles_bain,
-            'transaction' => $bien->transaction,
-            'statut'      => $bien->statut,
-            'photo'       => $photoUrl,
-            'type_bien'   => $bien->typeBien?->libelle,
-            'agence'      => $bien->agence?->nom_commercial,
+        // Prix formaté avec mention /mois pour les locations
+        $prixFormate = number_format($bien->prix, 0, ',', ' ') . ' FCFA'
+            . ($bien->transaction === 'location' ? ' / mois' : '');
+
+        $data = [
+            'id'           => $bien->id,
+            'titre'        => $bien->titre,
+            'prix'         => (float) $bien->prix,
+            'prix_formate' => $prixFormate,
+            'superficie'   => $bien->superficie,
+            'localisation' => $bien->localisation,
+            'ville'        => $bien->ville,
+            'chambres'     => $bien->chambres,
+            'salles_bain'  => $bien->salles_bain,
+            'transaction'  => $bien->transaction,
+            'statut'       => $bien->statut,
+            'photo'        => $photoUrl,
+            'type_bien'    => $bien->typeBien?->libelle,
+            'agence'       => $bien->agence?->nom_commercial,
         ];
+
+        // Conditions de location — toujours exposées pour les biens en location
+        if ($bien->transaction === 'location') {
+            $data['avance_mois']           = $bien->avance_mois ?? 1;
+            $data['caution_eau']           = (float) ($bien->caution_eau ?? 0);
+            $data['caution_electricite']   = (float) ($bien->caution_electricite ?? 0);
+            $data['montant_total_location'] = (float) $bien->montant_total_location;
+        }
+
+        return $data;
     }
 
     private function formatBienDetail(Bien $bien): array
@@ -135,11 +149,17 @@ class BienApiController extends Controller
                 'is_principale' => $p->is_principale,
             ]),
             'agence_detail' => $bien->agence ? [
-                'id'     => $bien->agence->id,
-                'nom'    => $bien->agence->nom_commercial,
-                'ville'  => $bien->agence->ville,
-                'secteur'=> $bien->agence->secteur,
-                'logo'   => $bien->agence->logo ? storage_url($bien->agence->logo) : null,
+                'id'      => $bien->agence->id,
+                'nom'     => $bien->agence->nom_commercial,
+                'ville'   => $bien->agence->ville,
+                'secteur' => $bien->agence->secteur,
+                'logo'    => $bien->agence->logo ? storage_url($bien->agence->logo) : null,
+                // Infos bancaires pour virement
+                'banque_nom'       => $bien->agence->banque_nom,
+                'banque_titulaire' => $bien->agence->banque_titulaire,
+                'banque_iban'      => $bien->agence->banque_iban,
+                'banque_swift'     => $bien->agence->banque_swift,
+                'has_banque'       => $bien->agence->hasBanque(),
             ] : null,
         ]);
     }

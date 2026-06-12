@@ -42,7 +42,6 @@
         <div class="absolute bottom-3 left-3">
             <span class="bg-black/60 backdrop-blur-sm text-white text-sm font-bold px-3 py-1 rounded-lg">
                 {{ $bien->prix_formate }}
-                @if($bien->transaction === 'location') / mois @endif
             </span>
         </div>
 

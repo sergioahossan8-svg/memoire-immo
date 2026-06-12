@@ -10,6 +10,7 @@ class Agence extends Model
         'nom_commercial', 'secteur', 'ville', 'adresse_complete',
         'email', 'telephone', 'logo', 'statut',
         'kkiapay_public_key', 'kkiapay_private_key', 'kkiapay_secret', 'kkiapay_sandbox',
+        'banque_nom', 'banque_titulaire', 'banque_iban', 'banque_swift',
     ];
 
     protected $hidden = ['kkiapay_private_key', 'kkiapay_secret'];
@@ -19,6 +20,11 @@ class Agence extends Model
         return !empty($this->kkiapay_public_key)
             && !empty($this->kkiapay_private_key)
             && !empty($this->kkiapay_secret);
+    }
+
+    public function hasBanque(): bool
+    {
+        return !empty($this->banque_iban) || !empty($this->banque_nom);
     }
 
     public function adminAgences()

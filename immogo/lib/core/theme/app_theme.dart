@@ -3,17 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  static const primary = Color(0xFF1B4F72);
-  static const secondary = Color(0xFF2E86AB);
-  static const accent = Color(0xFFE67E22);
+  static const primary    = Color(0xFF0A6E6E);   // teal foncé (hero, boutons)
+  static const secondary  = Color(0xFF00B894);   // teal clair (badges location, accents)
+  static const accent     = Color(0xFF0A6E6E);   // prix
   static const background = Color(0xFFF5F6FA);
-  static const surface = Color(0xFFFFFFFF);
-  static const textPrimary = Color(0xFF1C1C1E);
-  static const textSecondary = Color(0xFF6B7280);
+  static const surface    = Color(0xFFFFFFFF);
+  static const textPrimary    = Color(0xFF1C1C1E);
+  static const textSecondary  = Color(0xFF6B7280);
   static const success = Color(0xFF27AE60);
-  static const error = Color(0xFFE74C3C);
+  static const error   = Color(0xFFE74C3C);
   static const premium = Color(0xFFF39C12);
   static const divider = Color(0xFFE5E7EB);
+  // Hero gradient
+  static const heroTop    = Color(0xFF0A6E6E);
+  static const heroBottom = Color(0xFF0D8C8C);
 }
 
 class AppTheme {

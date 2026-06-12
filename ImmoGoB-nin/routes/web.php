@@ -50,6 +50,7 @@ Route::middleware(['auth', 'role.check:client'])->prefix('client')->name('client
     // Réservation & Paiement
     Route::get('/biens/{bien}/reserver', [ContratController::class, 'showReservation'])->name('reserver');
     Route::post('/biens/{bien}/reserver', [ContratController::class, 'reserver'])->name('reserver.post');
+    Route::get('/biens/{bien}/reservation-especes/{contrat}', [ContratController::class, 'showEspeces'])->name('reservation.especes');
     Route::get('/biens/{bien}/payer-reservation', [PaiementController::class, 'initReservation'])->name('payer.reservation');
     Route::get('/contrats/{contrat}/payer-solde', [PaiementController::class, 'showSolde'])->name('payer.solde');
     Route::post('/contrats/{contrat}/payer-solde', [PaiementController::class, 'payerSolde'])->name('payer.solde.post');
@@ -75,11 +76,14 @@ Route::middleware(['auth', 'role.check:admin_agence'])->prefix('admin')->name('a
     Route::resource('biens', AdminBienController::class);
     Route::patch('/biens/{bien}/statut', [AdminBienController::class, 'updateStatut'])->name('biens.statut');
     Route::patch('/biens/{bien}/publier', [AdminBienController::class, 'publier'])->name('biens.publier');
+    Route::post('/biens/{bien}/payer-especes', [AdminBienController::class, 'payerEspeces'])->name('biens.payer-especes');
+    Route::post('/biens/{bien}/confirmer-virement', [AdminBienController::class, 'confirmerVirement'])->name('biens.confirmer-virement');
 
     // Clients & Contrats
     Route::get('/clients', [ClientController::class, 'index'])->name('clients');
     Route::get('/clients/{user}', [ClientController::class, 'show'])->name('clients.show');
     Route::get('/reservations', [ClientController::class, 'reservations'])->name('reservations');
+    Route::post('/contrats/{contrat}/confirmer-especes', [ClientController::class, 'confirmerEspeces'])->name('contrats.confirmer-especes');
 
     // Administrateurs
     Route::resource('administrateurs', AdministrateurController::class)->except(['show']);

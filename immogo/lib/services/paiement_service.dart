@@ -24,6 +24,20 @@ class PaiementService {
     final response =
         await _dio.post(ApiConstants.payerComplet(bienId), data: {
       'type_contrat': typeContrat,
+      'mode_paiement': 'mobile_money',
+    });
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Paiement complet en espèces — crée le contrat en_attente et retourne les infos agence
+  Future<Map<String, dynamic>> payerCompletEspeces({
+    required int bienId,
+    required String typeContrat,
+  }) async {
+    final response =
+        await _dio.post(ApiConstants.payerComplet(bienId), data: {
+      'type_contrat': typeContrat,
+      'mode_paiement': 'especes',
     });
     return response.data as Map<String, dynamic>;
   }

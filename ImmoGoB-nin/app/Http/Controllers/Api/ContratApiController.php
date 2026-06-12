@@ -62,6 +62,15 @@ class ContratApiController extends Controller
             'lu' => false,
         ]);
 
+        // Calculer le montant total selon le type de contrat
+        // Pour une location : (prix × avance_mois) + caution_eau + caution_electricite
+        // Pour une vente : prix du bien
+        $montantTotal = $data['type_contrat'] === 'location'
+            ? $bien->montant_total_location
+            : (float) $bien->prix;
+
+        $montantAcompte = $montantTotal * 0.10;
+
         // Stocker dans le cache serveur (stateless — pas de session)
         // TTL 30 min : le client a 30 min pour confirmer le paiement
         $reservationKey = 'reservation_' . Str::random(24);
@@ -70,16 +79,65 @@ class ContratApiController extends Controller
             'type_contrat'  => $data['type_contrat'],
             'date_limite'   => $data['date_limite'],
             'mode_paiement' => $data['mode_paiement'],
-            'montant'       => $bien->prix * 0.10,
+            'montant'       => $montantAcompte,
+            'montant_total' => $montantTotal,
             'type_paiement' => 'acompte',
         ], now()->addMinutes(30));
+
+        // CAS ESPÈCES : créer le contrat en_attente mais laisser le bien DISPONIBLE
+        // L'admin confirmera le paiement manuellement → le bien passera à reserve/loue/vendu
+        if ($data['mode_paiement'] === 'especes') {
+            $contrat = \App\Models\Contrat::create([
+                'bien_id'                                       => $bien->id,
+                'client_id'                                     => auth()->id(),
+                'type_contrat'                                  => $data['type_contrat'],
+                'statut_contrat'                                => 'en_attente',
+                'date_contrat'                                  => now(),
+                'montant_total_' . $data['type_contrat']        => $montantTotal,
+                'date_reserv_' . $data['type_contrat']          => now(),
+                'date_limite_solde_' . $data['type_contrat']    => $data['date_limite'],
+            ]);
+
+            // Le bien reste DISPONIBLE jusqu'à confirmation du paiement par l'admin
+            // $bien->update(['statut' => 'reserve']); ← volontairement absent
+
+            $bien->load('agence.adminPrincipal');
+            $agence = $bien->agence;
+
+            \App\Models\NotificationImmogo::create([
+                'user_id' => auth()->id(),
+                'titre'   => 'Réservation en attente (Espèces)',
+                'message' => 'Votre réservation pour "' . $bien->titre . '" est enregistrée. Rendez-vous au siège de l\'agence pour régler l\'acompte de ' . number_format($montantAcompte, 0, ',', ' ') . ' FCFA.',
+                'lien'    => "/biens/{$bien->id}",
+            ]);
+
+            // Nettoyer le cache (pas nécessaire ici)
+            Cache::forget($reservationKey);
+
+            return response()->json([
+                'message'           => 'Réservation enregistrée. Rendez-vous au siège de l\'agence.',
+                'mode_paiement'     => 'especes',
+                'contrat_id'        => $contrat->id,
+                'bien_titre'        => $bien->titre,
+                'montant_acompte'   => $montantAcompte,
+                'agence' => $agence ? [
+                    'nom'             => $agence->nom_commercial,
+                    'telephone'       => $agence->telephone,
+                    'email'           => $agence->email,
+                    'adresse'         => $agence->adresse_complete,
+                    'ville'           => $agence->ville,
+                    'whatsapp'        => $agence->adminPrincipal?->whatsapp,
+                ] : null,
+            ]);
+        }
 
         return response()->json([
             'message'         => 'Réservation initiée. Procédez au paiement.',
             'bien_id'         => $bien->id,
-            'montant_acompte' => $bien->prix * 0.10,
+            'montant_total'   => $montantTotal,
+            'montant_acompte' => $montantAcompte,
             'bien_titre'      => $bien->titre,
-            'reservation_key' => $reservationKey,  // à conserver côté mobile pour initier le paiement
+            'reservation_key' => $reservationKey,
         ]);
     }
 

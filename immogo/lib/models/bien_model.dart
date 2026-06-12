@@ -18,6 +18,11 @@ class BienModel {
   final String? description;
   final List<BienPhotoModel>? photos;
   final AgenceDetailModel? agenceDetail;
+  // Conditions de location (exposées pour les biens en location)
+  final int? avanceMois;
+  final double? cautionEau;
+  final double? cautionElectricite;
+  final double? montantTotalLocation;
 
   const BienModel({
     required this.id,
@@ -37,7 +42,21 @@ class BienModel {
     this.description,
     this.photos,
     this.agenceDetail,
+    this.avanceMois,
+    this.cautionEau,
+    this.cautionElectricite,
+    this.montantTotalLocation,
   });
+
+  /// Montant total à payer pour une location
+  /// (prix × avance_mois) + caution_eau + caution_electricite
+  /// Pour une vente, retourne simplement le prix
+  double get montantTotal {
+    if (transaction == 'location') {
+      return montantTotalLocation ?? prix;
+    }
+    return prix;
+  }
 
   factory BienModel.fromJson(Map<String, dynamic> json) => BienModel(
         id: json['id'],
@@ -63,6 +82,11 @@ class BienModel {
         agenceDetail: json['agence_detail'] != null
             ? AgenceDetailModel.fromJson(json['agence_detail'])
             : null,
+        avanceMois: json['avance_mois'] as int?,
+        cautionEau: (json['caution_eau'] as num?)?.toDouble(),
+        cautionElectricite: (json['caution_electricite'] as num?)?.toDouble(),
+        montantTotalLocation:
+            (json['montant_total_location'] as num?)?.toDouble(),
       );
 }
 
@@ -87,13 +111,24 @@ class AgenceDetailModel {
   final String? ville;
   final String? secteur;
   final String? logo;
+  final String? banqueNom;
+  final String? banqueTitulaire;
+  final String? banqueIban;
+  final String? banqueSwift;
+  final bool hasBanque;
 
-  const AgenceDetailModel(
-      {required this.id,
-      required this.nom,
-      this.ville,
-      this.secteur,
-      this.logo});
+  const AgenceDetailModel({
+    required this.id,
+    required this.nom,
+    this.ville,
+    this.secteur,
+    this.logo,
+    this.banqueNom,
+    this.banqueTitulaire,
+    this.banqueIban,
+    this.banqueSwift,
+    this.hasBanque = false,
+  });
 
   factory AgenceDetailModel.fromJson(Map<String, dynamic> json) =>
       AgenceDetailModel(
@@ -102,6 +137,11 @@ class AgenceDetailModel {
         ville: json['ville'],
         secteur: json['secteur'],
         logo: json['logo'],
+        banqueNom: json['banque_nom'],
+        banqueTitulaire: json['banque_titulaire'],
+        banqueIban: json['banque_iban'],
+        banqueSwift: json['banque_swift'],
+        hasBanque: json['has_banque'] == true,
       );
 }
 

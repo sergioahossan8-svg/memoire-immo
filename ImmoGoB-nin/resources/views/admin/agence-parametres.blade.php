@@ -57,6 +57,63 @@
                     placeholder="+229 01 00 00 00" class="form-input">
             </div>
 
+            {{-- Infos Bancaires (Virement) --}}
+            <div class="border-t border-gray-100 pt-5">
+                <p class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <i class="fas fa-university"></i> Informations Bancaires (Virement)
+                </p>
+                <p class="text-xs text-gray-500 mb-4">
+                    Ces informations seront affichées aux clients qui choisissent le virement bancaire.
+                </p>
+
+                @if($agence->hasBanque())
+                    <div class="bg-green-50 rounded-xl p-3 mb-4 flex items-center gap-2 text-sm text-green-700">
+                        <i class="fas fa-check-circle"></i>
+                        Informations bancaires configurées — les clients pourront effectuer un virement.
+                    </div>
+                @else
+                    <div class="bg-orange-50 rounded-xl p-3 mb-4 flex items-center gap-2 text-sm text-orange-600">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Infos bancaires non renseignées — le virement ne sera pas proposé aux clients.
+                    </div>
+                @endif
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="form-label">Nom de la banque</label>
+                        <input type="text" name="banque_nom"
+                            value="{{ old('banque_nom', $agence->banque_nom) }}"
+                            placeholder="ex: Ecobank Bénin, BOA, SGBÉ..."
+                            class="form-input @error('banque_nom') border-red-400 @enderror">
+                        @error('banque_nom')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="form-label">Titulaire du compte</label>
+                        <input type="text" name="banque_titulaire"
+                            value="{{ old('banque_titulaire', $agence->banque_titulaire) }}"
+                            placeholder="Nom exact du titulaire du compte"
+                            class="form-input @error('banque_titulaire') border-red-400 @enderror">
+                        @error('banque_titulaire')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="form-label">IBAN / Numéro de compte</label>
+                        <input type="text" name="banque_iban"
+                            value="{{ old('banque_iban', $agence->banque_iban) }}"
+                            placeholder="ex: BJ66 BJ001 00001 12345678901 23"
+                            class="form-input font-mono @error('banque_iban') border-red-400 @enderror">
+                        @error('banque_iban')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="form-label">Code SWIFT / BIC <span class="text-gray-400 font-normal text-xs">(optionnel)</span></label>
+                        <input type="text" name="banque_swift"
+                            value="{{ old('banque_swift', $agence->banque_swift) }}"
+                            placeholder="ex: ECOCBJBJ"
+                            class="form-input font-mono @error('banque_swift') border-red-400 @enderror">
+                        @error('banque_swift')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+            </div>
+
             {{-- Configuration KKiapay --}}
             <div class="border-t border-gray-100 pt-5">
                 <p class="text-xs font-bold text-cyan-600 uppercase tracking-wider mb-4 flex items-center gap-1">

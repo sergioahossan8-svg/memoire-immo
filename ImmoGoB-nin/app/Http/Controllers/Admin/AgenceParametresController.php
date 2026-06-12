@@ -30,6 +30,11 @@ class AgenceParametresController extends Controller
             'kkiapay_private_key'=> 'nullable|string|max:100',
             'kkiapay_secret'     => 'nullable|string|max:100',
             'kkiapay_sandbox'    => 'nullable',
+            // Infos bancaires
+            'banque_nom'         => 'nullable|string|max:100',
+            'banque_titulaire'   => 'nullable|string|max:150',
+            'banque_iban'        => 'nullable|string|max:50',
+            'banque_swift'       => 'nullable|string|max:20',
         ]);
 
         if ($request->hasFile('logo')) {

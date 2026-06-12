@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
@@ -153,25 +152,26 @@ class _ProfilScreenState extends ConsumerState<ProfilScreen>
   Future<void> _logout() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      useRootNavigator: true,
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Déconnexion'),
         content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.of(dialogContext, rootNavigator: true).pop(false),
             child: const Text('Annuler'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child:
-                const Text('Déconnecter', style: TextStyle(color: AppColors.error)),
+            onPressed: () => Navigator.of(dialogContext, rootNavigator: true).pop(true),
+            child: const Text('Déconnecter',
+                style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
     );
     if (confirm == true) {
-      await ref.read(authProvider.notifier).logout();
-      if (mounted) context.go('/login');
+      await ref.read(authServiceProvider).clearToken();
+      ref.read(authProvider.notifier).setUnauthenticated();
     }
   }
 

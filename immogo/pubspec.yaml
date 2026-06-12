@@ -54,3 +54,5 @@ flutter:
 
   assets:
     - .env
+    - assets/img.png
+    - assets/hero_house.jpg

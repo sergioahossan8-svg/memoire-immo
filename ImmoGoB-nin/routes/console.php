@@ -10,4 +10,4 @@ Artisan::command('inspire', function () {
 
 // Expiration automatique des réservations (délai : 15 jours)
 // Vérification toutes les heures suffit largement pour un délai de 15 jours
-Schedule::command('reservations:expirer')->hourly();
+Schedule::command('reservations:annuler-expirees')->hourly();

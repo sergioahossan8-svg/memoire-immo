@@ -95,18 +95,19 @@ class BienDetailScreen extends ConsumerWidget {
                       if (!isAuth) {
                         showDialog(
                           context: context,
-                          builder: (_) => AlertDialog(
+                          useRootNavigator: true,
+                          builder: (ctx) => AlertDialog(
                             title: const Text('Connexion requise'),
                             content: const Text(
                                 'Connectez-vous pour ajouter ce bien à vos favoris.'),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.pop(context),
+                                onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
                                 child: const Text('Annuler'),
                               ),
                               ElevatedButton(
                                 onPressed: () {
-                                  Navigator.pop(context);
+                                  Navigator.of(ctx, rootNavigator: true).pop();
                                   context.go('/login');
                                 },
                                 child: const Text('Se connecter'),
@@ -197,6 +198,12 @@ class BienDetailScreen extends ConsumerWidget {
                       const SizedBox(height: 20),
                       // Caractéristiques
                       _caracteristiquesRow(context, bien),
+                      // Conditions de location
+                      if (bien.transaction == 'location' &&
+                          bien.avanceMois != null) ...[
+                        const SizedBox(height: 20),
+                        _conditionsLocationCard(context, bien),
+                      ],
                       const SizedBox(height: 20),
                       const Divider(),
                       const SizedBox(height: 16),
@@ -228,14 +235,18 @@ class BienDetailScreen extends ConsumerWidget {
                             style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 12),
                         CustomButton(
-                          label: 'Réserver (acompte 10%)',
+                          label: bien.transaction == 'location'
+                              ? 'Réserver (10% de ${Formatters.prix(bien.montantTotal)})'
+                              : 'Réserver (acompte 10%)',
                           icon: Icons.handshake_outlined,
                           onPressed: () =>
                               context.push('/reservation/${bien.id}'),
                         ),
                         const SizedBox(height: 12),
                         CustomButton(
-                          label: 'Payer en totalité',
+                          label: bien.transaction == 'location'
+                              ? 'Payer en totalité (${Formatters.prix(bien.montantTotal)})'
+                              : 'Payer en totalité',
                           icon: Icons.payment,
                           backgroundColor: AppColors.success,
                           onPressed: () =>
@@ -341,6 +352,103 @@ class BienDetailScreen extends ConsumerWidget {
     return Wrap(spacing: 12, runSpacing: 12, children: items);
   }
 
+  Widget _conditionsLocationCard(BuildContext context, BienModel bien) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withOpacity(0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.receipt_long_outlined,
+                  size: 16, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                'Conditions de location',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: AppColors.primary, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _conditionRow(
+            context,
+            Icons.calendar_today_outlined,
+            'Avance',
+            '${bien.avanceMois ?? 1} mois (${Formatters.prix(bien.prix * (bien.avanceMois ?? 1))})',
+          ),
+          if ((bien.cautionEau ?? 0) > 0) ...[
+            const SizedBox(height: 8),
+            _conditionRow(
+              context,
+              Icons.water_drop_outlined,
+              'Caution eau',
+              Formatters.prix(bien.cautionEau!),
+            ),
+          ],
+          if ((bien.cautionElectricite ?? 0) > 0) ...[
+            const SizedBox(height: 8),
+            _conditionRow(
+              context,
+              Icons.bolt_outlined,
+              'Caution électricité',
+              Formatters.prix(bien.cautionElectricite!),
+            ),
+          ],
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Divider(height: 1),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(children: [
+                const Icon(Icons.calculate_outlined,
+                    size: 16, color: AppColors.accent),
+                const SizedBox(width: 6),
+                Text('Total à régler',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600)),
+              ]),
+              Text(
+                Formatters.prix(bien.montantTotal),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.accent, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _conditionRow(
+      BuildContext context, IconData icon, String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(children: [
+          Icon(icon, size: 15, color: AppColors.textSecondary),
+          const SizedBox(width: 6),
+          Text(label,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: AppColors.textSecondary)),
+        ]),
+        Text(value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+      ],
+    );
+  }
+
   Widget _caracteristique(
       BuildContext context, IconData icon, String label) {
     return Container(
@@ -409,7 +517,7 @@ class BienDetailScreen extends ConsumerWidget {
   Future<void> _payerComplet(
       BuildContext context, WidgetRef ref, BienModel bien) async {
     // Le type de contrat est celui du bien (defini par l'admin, non modifiable)
-    // L'ecran de reservation le recuperera directement depuis bien.transaction
+    // Le montant tient compte des conditions de location (avance + cautions)
     context.push('/reservation/${bien.id}?type=complet');
   }
 

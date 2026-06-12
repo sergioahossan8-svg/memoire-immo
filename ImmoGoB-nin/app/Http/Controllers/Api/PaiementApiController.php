@@ -25,7 +25,8 @@ class PaiementApiController extends Controller
         }
 
         $data = $request->validate([
-            'type_contrat' => 'required|in:location,vente',
+            'type_contrat'  => 'required|in:location,vente',
+            'mode_paiement' => 'nullable|in:mobile_money,virement,especes,carte',
         ]);
 
         // Verifier que le type_contrat correspond a la transaction du bien
@@ -35,15 +36,60 @@ class PaiementApiController extends Controller
             ], 422);
         }
 
+        $montantTotal = $bien->transaction === 'location'
+            ? $bien->montant_total_location
+            : (float) $bien->prix;
+
+        // CAS ESPÈCES : créer le contrat en_attente + retourner infos agence
+        if (($data['mode_paiement'] ?? '') === 'especes') {
+            $contrat = Contrat::create([
+                'bien_id'                                   => $bien->id,
+                'client_id'                                 => auth()->id(),
+                'type_contrat'                              => $data['type_contrat'],
+                'statut_contrat'                            => 'en_attente',
+                'date_contrat'                              => now(),
+                'montant_total_' . $data['type_contrat']    => $montantTotal,
+                'date_reserv_' . $data['type_contrat']      => now(),
+            ]);
+
+            $bien->load('agence.adminPrincipal');
+            $agence = $bien->agence;
+
+            NotificationImmogo::create([
+                'user_id' => auth()->id(),
+                'titre'   => 'Demande espèces enregistrée',
+                'message' => 'Votre demande pour "' . $bien->titre . '" est enregistrée. Rendez-vous chez l\'agence pour régler ' . number_format($montantTotal, 0, ',', ' ') . ' FCFA.',
+                'lien'    => "/biens/{$bien->id}",
+            ]);
+
+            return response()->json([
+                'message'         => 'Demande enregistrée. Rendez-vous chez l\'agence.',
+                'mode_paiement'   => 'especes',
+                'contrat_id'      => $contrat->id,
+                'bien_titre'      => $bien->titre,
+                'montant_total'   => $montantTotal,
+                'agence' => $agence ? [
+                    'nom'      => $agence->nom_commercial,
+                    'telephone'=> $agence->telephone,
+                    'email'    => $agence->email,
+                    'adresse'  => $agence->adresse_complete,
+                    'ville'    => $agence->ville,
+                    'whatsapp' => $agence->adminPrincipal?->whatsapp,
+                ] : null,
+            ]);
+        }
+
+        // CAS ÉLECTRONIQUE
         return $this->initierKkiapay(
-            montant:      $bien->prix,
+            montant:      $montantTotal,
             description:  'Paiement complet - ' . $bien->titre,
             typePaiement: 'complet',
             meta: [
-                'action'       => 'complet',
-                'bien_id'      => $bien->id,
-                'agence_id'    => $bien->agence_id,
-                'type_contrat' => $data['type_contrat'],
+                'action'        => 'complet',
+                'bien_id'       => $bien->id,
+                'agence_id'     => $bien->agence_id,
+                'type_contrat'  => $data['type_contrat'],
+                'montant_total' => $montantTotal,
             ]
         );
     }
@@ -102,6 +148,7 @@ class PaiementApiController extends Controller
                 'type_contrat'    => $pending['type_contrat'],
                 'date_limite'     => $pending['date_limite'],
                 'mode_paiement'   => $pending['mode_paiement'],
+                'montant_total'   => $pending['montant_total'] ?? ((float) $bien->montant_total_location),
                 'reservation_key' => $reservationKey,
             ]
         );
@@ -213,13 +260,20 @@ class PaiementApiController extends Controller
     {
         $bien = Bien::findOrFail($pending['bien_id']);
 
+        // Utiliser le montant total calculé selon les conditions (avance + cautions)
+        $montantTotal = $pending['montant_total'] ?? (
+            $pending['type_contrat'] === 'location'
+                ? $bien->montant_total_location
+                : (float) $bien->prix
+        );
+
         $contrat = Contrat::create([
             'bien_id'                                       => $bien->id,
             'client_id'                                     => $pending['client_id'],
             'type_contrat'                                  => $pending['type_contrat'],
             'statut_contrat'                                => 'en_attente',
             'date_contrat'                                  => now(),
-            'montant_total_' . $pending['type_contrat']     => $bien->prix,
+            'montant_total_' . $pending['type_contrat']     => $montantTotal,
             'date_reserv_' . $pending['type_contrat']       => now(),
             'date_limite_solde_' . $pending['type_contrat'] => $pending['date_limite'],
         ]);
@@ -283,20 +337,26 @@ class PaiementApiController extends Controller
     {
         $bien = Bien::findOrFail($pending['bien_id']);
 
+        $montantTotal = $pending['montant_total'] ?? (
+            $pending['type_contrat'] === 'location'
+                ? $bien->montant_total_location
+                : (float) $bien->prix
+        );
+
         $contrat = Contrat::create([
             'bien_id'                                   => $bien->id,
             'client_id'                                 => $pending['client_id'],
             'type_contrat'                              => $pending['type_contrat'],
             'statut_contrat'                            => 'actif',
             'date_contrat'                              => now(),
-            'montant_total_' . $pending['type_contrat'] => $bien->prix,
+            'montant_total_' . $pending['type_contrat'] => $montantTotal,
             'date_reserv_' . $pending['type_contrat']   => now(),
         ]);
 
         $paiement = Paiement::create([
             'contrat_id'             => $contrat->id,
             'client_id'              => $pending['client_id'],
-            'montant'                => $bien->prix,
+            'montant'                => $montantTotal,
             'date_paiement'          => now(),
             'type_paiement'          => 'complet',
             'mode_paiement'          => 'mobile_money',

@@ -30,6 +30,41 @@
             </div>
         </div>
 
+        {{-- Conditions de location --}}
+        @if($bien->transaction === 'location')
+            <div class="border border-cyan-200 bg-cyan-50 rounded-xl p-4 mb-4">
+                <p class="text-xs font-bold text-cyan-700 uppercase tracking-wider mb-3">
+                    <i class="fas fa-file-contract mr-1"></i> Conditions de location
+                </p>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600"><i class="fas fa-home text-cyan-400 mr-1"></i> Loyer mensuel</span>
+                        <span class="font-semibold text-gray-800">{{ $bien->prix_formate }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600"><i class="fas fa-calendar-alt text-cyan-400 mr-1"></i> Avance ({{ $bien->avance_mois ?? 1 }} mois)</span>
+                        <span class="font-semibold text-gray-800">{{ number_format($bien->prix * ($bien->avance_mois ?? 1), 0, ',', ' ') }} FCFA</span>
+                    </div>
+                    @if($bien->caution_eau > 0)
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600"><i class="fas fa-tint text-blue-400 mr-1"></i> Caution eau</span>
+                            <span class="font-semibold text-gray-800">{{ number_format($bien->caution_eau, 0, ',', ' ') }} FCFA</span>
+                        </div>
+                    @endif
+                    @if($bien->caution_electricite > 0)
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600"><i class="fas fa-bolt text-yellow-400 mr-1"></i> Caution électricité</span>
+                            <span class="font-semibold text-gray-800">{{ number_format($bien->caution_electricite, 0, ',', ' ') }} FCFA</span>
+                        </div>
+                    @endif
+                    <div class="border-t border-cyan-200 pt-2 flex justify-between items-center font-bold text-cyan-800">
+                        <span><i class="fas fa-calculator mr-1"></i> Total à régler</span>
+                        <span class="text-base">{{ number_format($montantTotal, 0, ',', ' ') }} FCFA</span>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="bg-cyan-50 rounded-xl p-4 mb-6">
             <p class="text-sm text-cyan-700 font-medium">
                 <i class="fas fa-info-circle mr-1"></i>
@@ -77,13 +112,58 @@
 
             <div>
                 <label class="form-label">Mode de paiement de l'acompte</label>
-                <select name="mode_paiement" class="form-input" required>
+                <select name="mode_paiement" id="modePaiementReserv" class="form-input" required onchange="toggleVirementInfo()">
                     <option value="mobile_money">Mobile Money (MTN, Moov)</option>
                     <option value="virement">Virement bancaire</option>
-                    <option value="especes">Espèces</option>
                     <option value="carte">Carte bancaire</option>
                 </select>
             </div>
+
+            {{-- Infos bancaires pour virement (affichées dynamiquement) --}}
+            @php $agence = $bien->agence; @endphp
+            @if($agence && $agence->hasBanque())
+                <div id="virementInfo" class="hidden border border-blue-200 bg-blue-50 rounded-xl p-4">
+                    <p class="text-xs font-bold text-blue-700 uppercase tracking-wider mb-3 flex items-center gap-1">
+                        <i class="fas fa-university"></i> Coordonnées bancaires pour le virement
+                    </p>
+                    <div class="space-y-2 text-sm">
+                        @if($agence->banque_nom)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Banque</span>
+                                <span class="font-semibold text-gray-800">{{ $agence->banque_nom }}</span>
+                            </div>
+                        @endif
+                        @if($agence->banque_titulaire)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Titulaire</span>
+                                <span class="font-semibold text-gray-800">{{ $agence->banque_titulaire }}</span>
+                            </div>
+                        @endif
+                        @if($agence->banque_iban)
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-500">IBAN / N° compte</span>
+                                <span class="font-mono font-bold text-blue-700 text-xs bg-white px-2 py-1 rounded-lg border border-blue-200 select-all">{{ $agence->banque_iban }}</span>
+                            </div>
+                        @endif
+                        @if($agence->banque_swift)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">SWIFT / BIC</span>
+                                <span class="font-mono font-semibold text-gray-800">{{ $agence->banque_swift }}</span>
+                            </div>
+                        @endif
+                        <div class="flex justify-between items-center pt-1 border-t border-blue-200">
+                            <span class="text-gray-500">Montant à virer</span>
+                            <span class="font-bold text-blue-700">{{ number_format($acompte, 0, ',', ' ') }} FCFA</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Après avoir effectué le virement, présentez-vous à l'agence
+                        <strong>{{ $agence->nom_commercial }}</strong> avec votre reçu bancaire.
+                        L'agence confirmera votre réservation.
+                    </div>
+                </div>
+            @endif
 
             {{-- Badge paiement sécurisé --}}
             <div class="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
@@ -103,4 +183,16 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function toggleVirementInfo() {
+    const mode = document.getElementById('modePaiementReserv').value;
+    const info = document.getElementById('virementInfo');
+    if (info) {
+        info.classList.toggle('hidden', mode !== 'virement');
+    }
+}
+</script>
+@endpush
 @endsection

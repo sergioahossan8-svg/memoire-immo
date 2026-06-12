@@ -92,9 +92,6 @@
                     </div>
                     <div class="text-right flex-shrink-0">
                         <p class="text-2xl font-bold text-gray-800">{{ $bien->prix_formate }}</p>
-                        @if($bien->transaction === 'location')
-                            <p class="text-xs text-gray-400">/ mois</p>
-                        @endif
                     </div>
                 </div>
 
@@ -122,6 +119,51 @@
                         <i class="fas fa-exchange-alt text-cyan-400"></i> {{ ucfirst($bien->transaction) }}
                     </div>
                 </div>
+
+                {{-- Conditions de location --}}
+                @if($bien->transaction === 'location')
+                    <div class="mt-4 border border-cyan-200 bg-cyan-50 rounded-xl p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-file-contract text-cyan-500 text-sm"></i>
+                            <p class="text-sm font-bold text-cyan-700">Conditions de location</p>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                            <div class="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-cyan-100">
+                                <i class="fas fa-calendar-alt text-cyan-400"></i>
+                                <div>
+                                    <p class="text-xs text-gray-500">Avance</p>
+                                    <p class="font-semibold text-gray-800">{{ $bien->avance_mois ?? 1 }} mois</p>
+                                </div>
+                            </div>
+                            @if($bien->caution_eau > 0)
+                                <div class="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-cyan-100">
+                                    <i class="fas fa-tint text-blue-400"></i>
+                                    <div>
+                                        <p class="text-xs text-gray-500">Caution eau</p>
+                                        <p class="font-semibold text-gray-800">{{ number_format($bien->caution_eau, 0, ',', ' ') }} FCFA</p>
+                                    </div>
+                                </div>
+                            @endif
+                            @if($bien->caution_electricite > 0)
+                                <div class="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-cyan-100">
+                                    <i class="fas fa-bolt text-yellow-400"></i>
+                                    <div>
+                                        <p class="text-xs text-gray-500">Caution électricité</p>
+                                        <p class="font-semibold text-gray-800">{{ number_format($bien->caution_electricite, 0, ',', ' ') }} FCFA</p>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-cyan-200 flex items-center justify-between">
+                            <span class="text-sm text-cyan-700 font-medium">
+                                <i class="fas fa-calculator mr-1"></i> Montant total à régler :
+                            </span>
+                            <span class="text-lg font-bold text-cyan-700">
+                                {{ number_format($bien->montant_total_location, 0, ',', ' ') }} FCFA
+                            </span>
+                        </div>
+                    </div>
+                @endif
 
                 {{-- Description --}}
                 @if($bien->description)
@@ -166,11 +208,46 @@
                 <div class="card p-5 space-y-3">
                     <h3 class="font-semibold text-gray-800">Acquérir ce bien</h3>
 
-                    <div class="bg-cyan-50 rounded-xl p-3 text-xs text-cyan-700">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Acompte de réservation (10%) :
-                        <strong>{{ number_format($bien->prix * 0.10, 0, ',', ' ') }} FCFA</strong>
-                    </div>
+                    @if($bien->transaction === 'location')
+                        {{-- Info conditions location --}}
+                        <div class="bg-cyan-50 rounded-xl p-3 text-xs text-cyan-700 space-y-1">
+                            <div class="flex justify-between items-center">
+                                <span><i class="fas fa-home mr-1"></i> Loyer mensuel :</span>
+                                <strong>{{ $bien->prix_formate }}</strong>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span><i class="fas fa-calendar-alt mr-1"></i> Avance ({{ $bien->avance_mois ?? 1 }} mois) :</span>
+                                <strong>{{ number_format($bien->prix * ($bien->avance_mois ?? 1), 0, ',', ' ') }} FCFA</strong>
+                            </div>
+                            @if($bien->caution_eau > 0)
+                                <div class="flex justify-between items-center">
+                                    <span><i class="fas fa-tint mr-1"></i> Caution eau :</span>
+                                    <strong>{{ number_format($bien->caution_eau, 0, ',', ' ') }} FCFA</strong>
+                                </div>
+                            @endif
+                            @if($bien->caution_electricite > 0)
+                                <div class="flex justify-between items-center">
+                                    <span><i class="fas fa-bolt mr-1"></i> Caution élec. :</span>
+                                    <strong>{{ number_format($bien->caution_electricite, 0, ',', ' ') }} FCFA</strong>
+                                </div>
+                            @endif
+                            <div class="border-t border-cyan-200 pt-1 flex justify-between items-center font-bold text-cyan-800">
+                                <span>Total à régler :</span>
+                                <span>{{ number_format($bien->montant_total_location, 0, ',', ' ') }} FCFA</span>
+                            </div>
+                        </div>
+                        <div class="bg-amber-50 rounded-xl p-3 text-xs text-amber-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Acompte de réservation (10%) :
+                            <strong>{{ number_format($bien->montant_total_location * 0.10, 0, ',', ' ') }} FCFA</strong>
+                        </div>
+                    @else
+                        <div class="bg-cyan-50 rounded-xl p-3 text-xs text-cyan-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Acompte de réservation (10%) :
+                            <strong>{{ number_format($bien->prix * 0.10, 0, ',', ' ') }} FCFA</strong>
+                        </div>
+                    @endif
 
                     @auth
                         <a href="{{ route('client.reserver', $bien) }}"

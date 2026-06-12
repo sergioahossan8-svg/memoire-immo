@@ -121,16 +121,17 @@ class _PaiementWebviewScreenState extends State<PaiementWebviewScreen> {
   Future<void> _showCancelDialog() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      useRootNavigator: true,
+      builder: (ctx) => AlertDialog(
         title: const Text('Annuler le paiement ?'),
         content: const Text(
             'Voulez-vous vraiment annuler cette transaction ? Aucun paiement ne sera effectué.'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(false),
               child: const Text('Continuer')),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
               child: const Text('Annuler',
                   style: TextStyle(color: AppColors.error))),
         ],

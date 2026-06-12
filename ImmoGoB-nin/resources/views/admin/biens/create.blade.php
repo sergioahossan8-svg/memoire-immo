@@ -46,10 +46,81 @@
                 </div>
                 <div>
                     <label class="form-label">Type de contrat</label>
-                    <select name="transaction" class="form-input" required>
+                    <select name="transaction" id="transactionSelect" class="form-input" required onchange="toggleConditions()">
                         <option value="location" {{ old('transaction') === 'location' ? 'selected' : '' }}>À Louer</option>
                         <option value="vente" {{ old('transaction') === 'vente' ? 'selected' : '' }}>À Vendre</option>
                     </select>
+                </div>
+            </div>
+
+            {{-- SECTION CONDITIONS DE LOCATION (visible si transaction = location) --}}
+            <div id="conditionsLocation" class="border border-cyan-200 bg-cyan-50 rounded-xl p-4 space-y-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-5 h-5 bg-cyan-100 rounded flex items-center justify-center">
+                        <i class="fas fa-file-contract text-cyan-500 text-xs"></i>
+                    </div>
+                    <p class="text-xs font-bold text-cyan-600 uppercase tracking-wider">Conditions de location</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">
+                            Avance à payer <span class="text-red-400">*</span>
+                            <span class="text-gray-400 font-normal">(nombre de mois)</span>
+                        </label>
+                        <select name="avance_mois" class="form-input @error('avance_mois') border-red-400 @enderror">
+                            @for($i = 1; $i <= 12; $i++)
+                                <option value="{{ $i }}" {{ old('avance_mois', 1) == $i ? 'selected' : '' }}>
+                                    {{ $i }} mois{{ $i > 1 ? '' : '' }}
+                                </option>
+                            @endfor
+                        </select>
+                        <p class="text-xs text-gray-400 mt-1">Le nombre de mois d'avance à payer par le client.</p>
+                        @error('avance_mois')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="form-label">
+                            Prix du loyer <span class="text-gray-400 font-normal">(FCFA / mois)</span>
+                        </label>
+                        <div class="form-input bg-gray-100 text-gray-500 text-sm flex items-center gap-2 cursor-not-allowed">
+                            <i class="fas fa-info-circle text-cyan-400 text-xs"></i>
+                            Défini dans "Prix" ci-dessus
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">
+                            Caution eau
+                            <span class="text-gray-400 font-normal text-xs">(optionnel)</span>
+                        </label>
+                        <input type="number" name="caution_eau" value="{{ old('caution_eau') }}"
+                            placeholder="ex: 5000"
+                            class="form-input @error('caution_eau') border-red-400 @enderror" min="0" step="100">
+                        @error('caution_eau')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="form-label">
+                            Caution électricité
+                            <span class="text-gray-400 font-normal text-xs">(optionnel)</span>
+                        </label>
+                        <input type="number" name="caution_electricite" value="{{ old('caution_electricite') }}"
+                            placeholder="ex: 10000"
+                            class="form-input @error('caution_electricite') border-red-400 @enderror" min="0" step="100">
+                        @error('caution_electricite')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                {{-- Récap montant total --}}
+                <div class="bg-white rounded-xl p-3 border border-cyan-200">
+                    <p class="text-xs font-semibold text-gray-600 mb-1">
+                        <i class="fas fa-calculator text-cyan-400 mr-1"></i>
+                        Montant total à payer par le client :
+                    </p>
+                    <p class="text-sm font-bold text-cyan-700" id="recapMontant">
+                        (Prix × avance) + cautions
+                    </p>
                 </div>
             </div>
 
@@ -135,6 +206,46 @@
 @push('scripts')
 <script>
     let selectedFiles = [];
+
+    function toggleConditions() {
+        const select = document.getElementById('transactionSelect');
+        const section = document.getElementById('conditionsLocation');
+        const avanceSelect = document.querySelector('[name="avance_mois"]');
+
+        if (select.value === 'location') {
+            section.style.display = '';
+            if (avanceSelect) avanceSelect.required = true;
+        } else {
+            section.style.display = 'none';
+            if (avanceSelect) avanceSelect.required = false;
+        }
+        updateRecap();
+    }
+
+    function updateRecap() {
+        const prix = parseFloat(document.querySelector('[name="prix"]')?.value || 0);
+        const avance = parseInt(document.querySelector('[name="avance_mois"]')?.value || 1);
+        const eau = parseFloat(document.querySelector('[name="caution_eau"]')?.value || 0);
+        const elec = parseFloat(document.querySelector('[name="caution_electricite"]')?.value || 0);
+        const total = (prix * avance) + eau + elec;
+        const recap = document.getElementById('recapMontant');
+        if (recap && prix > 0) {
+            recap.textContent = new Intl.NumberFormat('fr-FR').format(total) + ' FCFA'
+                + ' = (' + new Intl.NumberFormat('fr-FR').format(prix) + ' × ' + avance + ' mois)'
+                + (eau > 0 ? ' + ' + new Intl.NumberFormat('fr-FR').format(eau) + ' eau' : '')
+                + (elec > 0 ? ' + ' + new Intl.NumberFormat('fr-FR').format(elec) + ' élec.' : '');
+        } else if (recap) {
+            recap.textContent = '(Prix × avance) + cautions';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleConditions();
+        document.querySelector('[name="prix"]')?.addEventListener('input', updateRecap);
+        document.querySelector('[name="avance_mois"]')?.addEventListener('change', updateRecap);
+        document.querySelector('[name="caution_eau"]')?.addEventListener('input', updateRecap);
+        document.querySelector('[name="caution_electricite"]')?.addEventListener('input', updateRecap);
+    });
 
     function handleFiles(files) {
         const remaining = 10 - selectedFiles.length;
